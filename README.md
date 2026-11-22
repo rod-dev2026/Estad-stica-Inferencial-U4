@@ -19,7 +19,7 @@ El laboratorio está organizado en 5 módulos temáticos orientados a la enseña
 1. **Regresión Lineal Simple**
    * Cálculo paso a paso de medias, sumas de cuadrados ($S_{xx}, S_{xy}$), pendiente ($b_1$), intercepto ($b_0$), correlación ($r$), $R^2$ y error estándar ($s_e$).
    * Tabla ANOVA completa, intervalos de confianza para parámetros, predicción puntual y despeje inverso de $X$ a partir de un valor objetivo de $Y$ (ej. análisis de SLA).
-   * Gráfica de ajuste con intervalos de confianza de la media y de predicción, más gráfico de residuos[cite: 1].
+   * Gráfica de ajuste con intervalos de confianza de la media y de predicción, más gráfico de residuos.
 
 2. **Regresión Lineal Múltiple**
    * Estimación por Mínimos Cuadrados Ordinarios (MCO) matricial $\mathbf{b} = (\mathbf{X}^T\mathbf{X})^{-1}\mathbf{X}^T\mathbf{y}$.
