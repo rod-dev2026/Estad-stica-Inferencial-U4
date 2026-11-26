@@ -1,0 +1,1417 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Laboratorio de Regresión</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js" defer></script>
+<style>
+:root{
+  --bg:#F3F5F8; --surface:#FFFFFF; --ink:#1B2330; --muted:#5A6577; --line:#DCE1E9; --soft:#EEF1F6;
+  --a1:#0072B2; --a2:#00805F; --a3:#7B3F9E; --a4:#BE4B0A; --a5:#9A6700;
+  --acc:var(--a1);
+  --k1:#0072B2; --k2:#E69F00; --k3:#009E73; --bad:#C0392B; --good:#1E8E5A; --warn:#9A6700;
+  --font:'IBM Plex Sans',system-ui,-apple-system,'Segoe UI',sans-serif; --mono:'IBM Plex Mono',ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#11151C; --surface:#1A2029; --ink:#E7EAF0; --muted:#9AA4B5; --line:#2C3441; --soft:#222A36;
+  --a1:#4DA6DE; --a2:#3FBF98; --a3:#BC8BD8; --a4:#F2904F; --a5:#E3B24C;
+  --k1:#56B4E9; --k2:#F0B84A; --k3:#2FC79A; --bad:#F0826F; --good:#4CC38A; --warn:#E3B24C; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#11151C; --surface:#1A2029; --ink:#E7EAF0; --muted:#9AA4B5; --line:#2C3441; --soft:#222A36;
+  --a1:#4DA6DE; --a2:#3FBF98; --a3:#BC8BD8; --a4:#F2904F; --a5:#E3B24C;
+  --k1:#56B4E9; --k2:#F0B84A; --k3:#2FC79A; --bad:#F0826F; --good:#4CC38A; --warn:#E3B24C; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--font);font-size:14px;line-height:1.5;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:18px 40px}
+.wrap{max-width:1320px;margin:0 auto}
+header{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;margin-bottom:14px}
+h1{font-size:22px;margin:0;font-weight:700;letter-spacing:-.01em;text-wrap:balance}
+header p{margin:0;color:var(--muted);max-width:70ch}
+.meta{margin-left:auto;display:flex;flex-direction:column;align-items:flex-end;gap:5px}
+.credits{font-size:11.5px;color:var(--muted);line-height:1.35;text-align:right}
+nav{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
+nav button{font:inherit;cursor:pointer;border:1px solid var(--line);background:var(--surface);color:var(--ink);padding:8px 12px;border-radius:7px;display:flex;gap:8px;align-items:center;min-width:0}
+nav button b{display:inline-grid;place-items:center;width:22px;height:22px;border-radius:5px;background:var(--c);color:#fff;font-size:12px;font-family:var(--mono)}
+nav button[aria-selected="true"]{border-color:var(--c);box-shadow:inset 0 -3px 0 var(--c);font-weight:600}
+nav button:focus-visible,button:focus-visible,select:focus-visible,input:focus-visible,textarea:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+.layout{display:grid;grid-template-columns:minmax(320px,420px) minmax(0,1fr);gap:16px;align-items:start}
+@media(max-width:900px){.layout{grid-template-columns:minmax(0,1fr)}}
+.panel,.card{background:var(--surface);border:1px solid var(--line);border-radius:9px;padding:14px 16px;min-width:0}
+.panel{position:sticky;top:10px;display:flex;flex-direction:column;gap:12px;max-height:calc(100vh - 20px);overflow:auto}
+@media(max-width:900px){.panel{position:static;max-height:none}}
+.panel h2,.card h3{margin:0;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--acc);font-weight:600}
+.card h3{margin-bottom:10px}
+.panel h2 small{font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);font-size:11.5px;margin-left:6px}
+.results{display:flex;flex-direction:column;gap:14px;min-width:0}
+label{display:block;font-size:12px;color:var(--muted);margin-bottom:3px}
+textarea,select,input[type=text],input[type=number]{width:100%;font:inherit;font-family:var(--mono);font-size:12.5px;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:6px 8px}
+textarea{min-height:190px;resize:vertical;white-space:pre;overflow:auto;line-height:1.45}
+.ctxin{min-height:66px;font-family:var(--font);font-size:12.5px;white-space:pre-wrap}
+.row{display:flex;gap:8px;flex-wrap:wrap}.row>*{flex:1 1 120px;min-width:0}
+.btn{font:inherit;font-size:12.5px;cursor:pointer;border:1px solid var(--line);background:var(--soft);color:var(--ink);padding:6px 10px;border-radius:6px}
+.btn.pri{background:var(--acc);border-color:var(--acc);color:#fff}
+.chk{display:flex;flex-wrap:wrap;gap:6px}
+.chk label{display:flex;gap:6px;align-items:center;color:var(--ink);margin:0;font-size:12.5px;border:1px solid var(--line);padding:3px 8px;border-radius:5px;background:var(--bg);cursor:pointer}
+.chk input{accent-color:var(--acc)}
+.hint{font-size:12px;color:var(--muted);margin:0}
+.err{border:1px solid var(--bad);color:var(--bad);background:color-mix(in srgb,var(--bad) 8%,var(--surface));padding:10px 12px;border-radius:7px;font-size:13px}
+.warn{border:1px solid var(--warn);color:var(--ink);background:color-mix(in srgb,var(--warn) 12%,var(--surface));padding:8px 12px;border-radius:7px;font-size:13px}
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px}
+.tile{border:1px solid var(--line);border-radius:7px;padding:8px 10px;background:var(--bg);min-width:0}
+.tile .v{font-family:var(--mono);font-size:19px;font-weight:500;color:var(--acc);overflow-wrap:anywhere}
+.tile .l{font-size:11.5px;color:var(--muted);line-height:1.3}
+.eq{font-family:var(--mono);font-size:14px;background:var(--bg);border:1px solid var(--line);border-left:4px solid var(--acc);border-radius:6px;padding:10px 12px;overflow-wrap:anywhere}
+.tw{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:12.5px}
+th{background:var(--acc);color:#fff;font-weight:600;text-align:right;padding:5px 8px;white-space:nowrap}
+th:first-child,td:first-child{text-align:left}
+td{padding:4px 8px;border-bottom:1px solid var(--line);text-align:right;font-family:var(--mono);font-size:12px;white-space:nowrap}
+td:first-child{font-family:var(--font);font-weight:500}
+tr.hl td{background:color-mix(in srgb,var(--bad) 12%,var(--surface))}
+tr.tot td{font-weight:600;background:var(--soft)}
+td.diag{background:color-mix(in srgb,var(--acc) 22%,var(--surface));font-weight:600}
+td.l{text-align:left;font-family:var(--font);white-space:normal}
+th:last-child.l{text-align:left}
+td.sig{color:var(--good);font-weight:600}
+.charts{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr));gap:14px}
+figure{margin:0;min-width:0;position:relative}
+figcaption{font-size:12px;color:var(--muted);margin-top:4px}
+svg.plot{width:100%;height:auto;display:block;background:var(--surface)}
+svg text{font-family:var(--font);font-size:11px;fill:var(--muted)}
+svg text.t{fill:var(--ink);font-weight:600}
+.legend{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:12px;color:var(--muted);margin-top:4px}
+.legend i{box-shadow:inset 0 0 0 1px var(--muted);display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:5px;vertical-align:-1px}
+details{margin-top:8px;font-size:12.5px;color:var(--muted)}
+details summary{cursor:pointer;color:var(--acc);font-weight:600}
+details dl{margin:6px 0 0;display:grid;grid-template-columns:max-content 1fr;gap:3px 12px}
+details dt{font-weight:600;color:var(--ink)}details dd{margin:0}
+.interp{margin:8px 0 0;padding-left:18px}.interp li{margin:3px 0}
+.sl{display:flex;align-items:center;gap:10px}.sl input{flex:1;accent-color:var(--acc)}
+.mono{font-family:var(--mono)}
+sub,sup{line-height:0}
+.formula{color:var(--muted);font-size:12.5px;margin:6px 0 0}
+.pill{display:inline-block;padding:1px 8px;border-radius:99px;font-size:11.5px;font-weight:600;border:1px solid var(--line)}
+.pill.ok{color:var(--good);border-color:var(--good)}.pill.no{color:var(--bad);border-color:var(--bad)}
+.dataSection{display:flex;flex-direction:column;gap:8px}
+.dataSection .secTitle{display:flex;align-items:baseline;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.dataSection .secTitle b{font-size:13px;color:var(--ink)}
+.dataSection .secTitle small{font-size:11.5px;color:var(--muted)}
+.gridtools{display:flex;flex-wrap:wrap;gap:5px;align-items:center}
+.gridtools .btn{padding:4px 9px;font-size:12px;font-weight:500}
+.gridtools .info{margin-left:auto;font-size:11.5px;color:var(--muted);font-family:var(--mono)}
+.gridbox{border:1px solid var(--line);border-radius:7px;overflow:hidden;background:var(--surface)}
+.gridscroll{overflow:auto;max-height:340px;background:var(--surface)}
+table.grid{border-collapse:separate;border-spacing:0;width:100%;font-size:12px;table-layout:fixed}
+table.grid thead th{position:sticky;top:0;z-index:2;background:var(--soft);padding:0;border-right:1px solid var(--line);border-bottom:2px solid var(--acc)}
+table.grid thead th:last-child{border-right:0}
+table.grid tbody td{position:relative;padding:0;border-right:1px solid var(--line);border-bottom:1px solid var(--line);background:var(--surface)}
+table.grid tbody td:last-child{border-right:0}
+table.grid tbody tr:last-child td{border-bottom:0}
+table.grid tbody tr:nth-child(even) td{background:color-mix(in srgb,var(--soft) 40%,var(--surface))}
+table.grid .ix{width:32px;min-width:32px;max-width:32px;padding:0;background:var(--soft);color:var(--muted);font-family:var(--mono);font-size:11px;text-align:center;position:sticky;left:0;z-index:1;border-right:1px solid var(--line)}
+table.grid thead .ix{z-index:3}
+table.grid .ix span{display:block;padding:6px 4px}
+table.grid input{display:block;width:100%;min-width:0;border:0;background:transparent;font:inherit;font-family:var(--mono);font-size:12px;padding:6px 8px;color:var(--ink);border-radius:0;outline:0}
+table.grid input:hover{background:color-mix(in srgb,var(--acc) 6%,transparent)}
+table.grid input:focus{outline:2px solid var(--acc);outline-offset:-2px;background:var(--bg);position:relative;z-index:5}
+table.grid thead input{font-weight:600;color:var(--acc);background:transparent;text-align:center}
+table.grid thead input:focus{background:var(--surface)}
+.emptyGrid{padding:16px 12px;text-align:center;font-size:12.5px;color:var(--muted)}
+.emptyGrid b{color:var(--ink)}
+.csvToggle{margin-top:2px}
+.csvToggle>summary{font-size:12px;color:var(--acc);cursor:pointer;padding:4px 0}
+.csvToggle textarea{width:100%;margin-top:6px;font-family:var(--mono);font-size:12px}
+.tools{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-bottom:6px}
+.tools .btn{padding:4px 9px;font-size:12px}
+.tools .btn[aria-pressed="true"]{background:var(--acc);border-color:var(--acc);color:#fff}
+.ctxnote p{margin:0 0 6px}
+.concl ul{margin:0;padding-left:18px}
+.report-tools{display:flex;gap:8px;flex-wrap:wrap;align-items:center;padding:10px 12px;background:var(--surface);border:1px solid var(--line);border-radius:9px;margin-bottom:14px}
+.report-tools .rt-label{font-size:11.5px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.06em;margin-right:4px}
+.report-tools .btn{padding:6px 12px;font-size:12.5px;display:inline-flex;align-items:center;gap:6px}
+.report-tools .btn.primary{background:var(--acc);border-color:var(--acc);color:#fff}
+.report-tools .rt-hint{margin-left:auto;font-size:11.5px;color:var(--muted)}
+.chart-dl{position:absolute;top:6px;right:6px;z-index:10;font-size:11px;padding:3px 8px;opacity:.8;background:var(--surface);border:1px solid var(--line);color:var(--ink);border-radius:5px;cursor:pointer;font-family:var(--font)}
+.chart-dl:hover{opacity:1;border-color:var(--acc);color:var(--acc)}
+.chart-dl::before{content:'⬇ '}
+.apa-header{display:none}
+.hypbox{border:1px solid var(--line);border-left:4px solid var(--acc);border-radius:6px;padding:8px 12px;background:var(--bg);font-size:12.5px}
+.hypbox p{margin:2px 0}
+.hypbox b{color:var(--ink)}
+@media print{
+  @page{size:letter;margin:2.54cm}
+  html,body{background:#fff!important;color:#000!important;font-family:'Times New Roman',Times,serif!important;font-size:12pt!important;line-height:1.6!important}
+  .wrap{max-width:100%!important;margin:0!important;padding:0!important}
+  header,nav,.panel,.report-tools,#tabs,#panel,.tools,.chart-dl,.btn,button,.sl,input[type=range],.theme,.credits,.meta{display:none!important}
+  .layout{display:block!important;grid-template-columns:1fr!important;gap:0!important}
+  .results{display:block!important;gap:0!important}
+  .card{border:none!important;border-radius:0!important;padding:0!important;margin:0 0 14pt 0!important;background:#fff!important;page-break-inside:avoid;break-inside:avoid;min-width:0!important}
+  .card h3{font-family:'Times New Roman',Times,serif!important;font-size:12pt!important;font-weight:bold!important;text-transform:none!important;letter-spacing:0!important;color:#000!important;text-align:center!important;margin:12pt 0 8pt 0!important}
+  .tiles{grid-template-columns:repeat(auto-fit,minmax(2in,1fr))!important;gap:6pt!important}
+  .tile{border:1px solid #000!important;background:#fff!important;padding:6pt!important;border-radius:0!important}
+  .tile .v{color:#000!important;font-size:11pt!important;font-family:'Times New Roman',Times,serif!important}
+  .tile .l{color:#333!important;font-size:9.5pt!important}
+  .eq{border:1px solid #000!important;background:#fff!important;color:#000!important;font-size:10.5pt!important;padding:8pt!important;font-family:Consolas,'Courier New',monospace!important;border-radius:0!important}
+  .formula,.hint,.warn{color:#333!important}
+  .warn{border:1px solid #000!important;background:#fff!important;padding:6pt!important;page-break-inside:avoid}
+  details{display:block!important}
+  details summary{display:none!important}
+  details dl{display:block!important;grid-template-columns:1fr!important}
+  details dt{font-style:italic;color:#000!important;margin-top:6pt;display:block!important}
+  details dd{margin:2pt 0 6pt 12pt!important;color:#000!important;display:block!important}
+  .interp{padding-left:20pt!important}
+  .interp li{margin:4pt 0!important;color:#000!important}
+  table{width:100%!important;font-size:10.5pt!important;border-top:2px solid #000!important;border-bottom:2px solid #000!important;border-collapse:collapse!important;page-break-inside:avoid;break-inside:avoid;margin:8pt 0!important}
+  table thead tr{border-bottom:1px solid #000!important}
+  th{background:#fff!important;color:#000!important;font-weight:normal!important;font-style:italic!important;border:none!important;padding:4pt 8pt!important;text-align:right!important;font-family:'Times New Roman',Times,serif!important;text-transform:none!important;letter-spacing:0!important}
+  th:first-child{text-align:left!important}
+  td{background:#fff!important;color:#000!important;border:none!important;padding:2pt 8pt!important;font-family:'Times New Roman',Times,serif!important;font-size:10.5pt!important}
+  td:first-child{text-align:left!important;font-weight:normal!important}
+  tr.tot td,tr.hl td,td.diag,td.sig{background:#fff!important;color:#000!important}
+  td.sig{font-weight:bold!important}
+  figure{page-break-inside:avoid;break-inside:avoid;margin:12pt 0!important}
+  figcaption{font-style:italic;font-size:11pt;color:#000!important;margin-top:4pt!important}
+  svg.plot{background:#fff!important;print-color-adjust:exact;-webkit-print-color-adjust:exact;max-width:100%!important;height:auto!important}
+  .charts{display:block!important}
+  .charts>figure{display:block!important;width:100%!important;margin:12pt 0!important}
+  .err{border:1px solid #000!important;background:#fff!important;color:#000!important;padding:6pt!important}
+  .pill{border:1px solid #000!important;color:#000!important;background:#fff!important}
+  .hypbox{border:1px solid #000!important;background:#fff!important;padding:6pt!important}
+  .apa-header{display:block!important;font-family:'Times New Roman',Times,serif!important;color:#000!important}
+  .apa-header h1{font-family:'Times New Roman',Times,serif!important;font-size:16pt!important;color:#000!important;font-weight:bold!important;letter-spacing:0!important;margin:0 0 24pt 0!important;text-align:center!important;border:none!important;padding:0!important}
+  .apa-header .apa-author{font-size:12pt;margin:0!important;color:#000!important;text-align:center!important;line-height:1.5!important}
+  .apa-header .apa-institution{font-size:12pt;margin:0!important;color:#000!important;text-align:center!important;line-height:1.5!important}
+  .apa-header .apa-date{font-size:12pt;margin:24pt 0 0 0!important;color:#000!important;text-align:center!important}
+  .apa-header .apa-section{font-family:'Times New Roman',Times,serif!important;font-size:12pt!important;color:#000!important;font-weight:bold!important;text-align:center!important;text-transform:none!important;letter-spacing:0!important;margin:14pt 0 8pt 0!important;border:none!important;padding:0!important;background:none!important;border-radius:0!important}
+  .apa-header p{font-family:'Times New Roman',Times,serif!important;font-size:12pt!important;line-height:1.6!important;color:#000!important;text-indent:0.5in;text-align:justify;margin:0 0 8pt 0!important}
+  .apa-page-break{page-break-after:always;break-after:page;height:0;visibility:hidden;display:block}
+  .ctxnote{display:none!important}
+}
+</style>
+
+<div class="wrap" id="app">
+  <header>
+    <h1>Laboratorio de Regresión</h1>
+    <p>Escribe tus datos celda por celda, elige el tema y obtén resultados, pruebas, supuestos y gráficas, con el mismo procedimiento de la guía.</p>
+    <div class="meta">
+      <button class="btn theme" id="themeBtn" type="button">Tema claro / oscuro</button>
+      <div class="credits">Diseño: Rod Compañ 2026<br>TecNM Tuxtepec</div>
+    </div>
+  </header>
+  <nav id="tabs" role="tablist" aria-label="Temas"></nav>
+
+  <div id="apaHeader" class="apa-header" aria-hidden="true">
+    <h1 id="apaTitle">Análisis de Regresión</h1>
+    <p class="apa-author">Rod Compañ</p>
+    <p class="apa-institution">Instituto Tecnológico de Tuxtepec, TecNM</p>
+    <p class="apa-date" id="apaDate"></p>
+    <div class="apa-page-break"></div>
+    <h2 class="apa-section">Resumen</h2>
+    <p id="apaAbstract"></p>
+    <h2 class="apa-section">Introducción</h2>
+    <p id="apaContext"></p>
+    <h2 class="apa-section">Método</h2>
+    <p id="apaMethod"></p>
+    <div class="apa-page-break"></div>
+    <h2 class="apa-section">Resultados</h2>
+  </div>
+
+  <div class="report-tools" id="reportTools">
+    <span class="rt-label">Exportar</span>
+    <button class="btn primary" id="btnPdf" type="button" title="Abre el diálogo de impresión; elige «Guardar como PDF» para generar el archivo con formato APA.">📄 PDF (APA)</button>
+    <button class="btn" id="btnXls" type="button" title="Descarga un libro .xlsx con hojas separadas: Datos, Resultados e Info.">📊 Excel (.xlsx)</button>
+    <button class="btn" id="btnCsv" type="button" title="Descarga los datos originales como CSV para Excel.">📋 Datos (CSV)</button>
+    <span class="rt-hint">Cada gráfica tiene su propio botón «PNG».</span>
+  </div>
+
+  <div class="layout">
+    <aside class="panel" id="panel"></aside>
+    <section class="results" id="out" aria-live="polite"></section>
+  </div>
+</div>
+
+<script>
+'use strict';
+/* =================== utilidades numéricas =================== */
+const sum=a=>a.reduce((s,v)=>s+v,0), mean=a=>sum(a)/a.length;
+const dot=(a,b)=>{let s=0;for(let i=0;i<a.length;i++)s+=a[i]*b[i];return s};
+function T(A){return A[0].map((_,j)=>A.map(r=>r[j]))}
+function mul(A,B){const Bt=T(B);return A.map(r=>Bt.map(c=>dot(r,c)))}
+function mulv(A,v){return A.map(r=>dot(r,v))}
+function matInv(M){
+  const n=M.length,A=M.map((r,i)=>[...r,...Array.from({length:n},(_,j)=>+(i===j))]);
+  for(let c=0;c<n;c++){
+    let p=c;for(let r=c+1;r<n;r++)if(Math.abs(A[r][c])>Math.abs(A[p][c]))p=r;
+    if(Math.abs(A[p][c])<1e-12)return null;
+    [A[c],A[p]]=[A[p],A[c]];
+    const d=A[c][c];for(let j=0;j<2*n;j++)A[c][j]/=d;
+    for(let r=0;r<n;r++)if(r!==c){const f=A[r][c];if(f)for(let j=0;j<2*n;j++)A[r][j]-=f*A[c][j]}
+  }
+  return A.map(r=>r.slice(n));
+}
+function lgam(x){const c=[76.18009172947146,-86.50532032941677,24.01409824083091,-1.231739572450155,0.1208650973866179e-2,-0.5395239384953e-5];
+  let y=x,t=x+5.5;t-=(x+.5)*Math.log(t);let s=1.000000000190015;for(let j=0;j<6;j++){y+=1;s+=c[j]/y}return -t+Math.log(2.5066282746310005*s/x)}
+function betacf(a,b,x){const FP=1e-300;let qab=a+b,qap=a+1,qam=a-1,c=1,d=1-qab*x/qap;if(Math.abs(d)<FP)d=FP;d=1/d;let h=d;
+  for(let m=1;m<=300;m++){const m2=2*m;let aa=m*(b-m)*x/((qam+m2)*(a+m2));d=1+aa*d;if(Math.abs(d)<FP)d=FP;c=1+aa/c;if(Math.abs(c)<FP)c=FP;d=1/d;h*=d*c;
+    aa=-(a+m)*(qab+m)*x/((a+m2)*(qap+m2));d=1+aa*d;if(Math.abs(d)<FP)d=FP;c=1+aa/c;if(Math.abs(c)<FP)c=FP;d=1/d;const del=d*c;h*=del;if(Math.abs(del-1)<1e-14)break}return h}
+function ibeta(x,a,b){if(x<=0)return 0;if(x>=1)return 1;const bt=Math.exp(lgam(a+b)-lgam(a)-lgam(b)+a*Math.log(x)+b*Math.log(1-x));
+  return x<(a+1)/(a+b+2)?bt*betacf(a,b,x)/a:1-bt*betacf(b,a,1-x)/b}
+const tTwo=(t,df)=>ibeta(df/(df+t*t),df/2,.5);
+const fSf=(F,d1,d2)=>F<=0?1:ibeta(d2/(d2+d1*F),d2/2,d1/2);
+function gammaP(a,x){if(x<=0)return 0;const g=lgam(a);
+  if(x<a+1){let ap=a,s=1/a,del=s;for(let n=0;n<500;n++){ap++;del*=x/ap;s+=del;if(Math.abs(del)<Math.abs(s)*1e-15)break}return s*Math.exp(-x+a*Math.log(x)-g)}
+  let b=x+1-a,c=1e300,d=1/b,h=d;for(let i=1;i<500;i++){const an=-i*(i-a);b+=2;d=an*d+b;if(Math.abs(d)<1e-300)d=1e-300;c=b+an/c;if(Math.abs(c)<1e-300)c=1e-300;d=1/d;const del=d*c;h*=del;if(Math.abs(del-1)<1e-15)break}
+  return 1-Math.exp(-x+a*Math.log(x)-g)*h}
+const chiSf=(x,k)=>x<=0?1:1-gammaP(k/2,x/2);
+const zTwo=z=>1-gammaP(.5,z*z/2);
+function tCrit(conf,df){const al=1-conf;let lo=0,hi=1e3;for(let i=0;i<200;i++){const m=(lo+hi)/2;if(tTwo(m,df)>al)lo=m;else hi=m}return(lo+hi)/2}
+function fCrit(alpha,d1,d2){let lo=0,hi=1e4;for(let i=0;i<200;i++){const m=(lo+hi)/2;if(fSf(m,d1,d2)>alpha)lo=m;else hi=m}return(lo+hi)/2}
+const Z95={.9:1.6449,.95:1.96,.99:2.5758};
+function fPdf(x,d1,d2){if(x<=0)return 0;const lb=lgam(d1/2)+lgam(d2/2)-lgam((d1+d2)/2);
+  return Math.exp((d1/2)*Math.log(d1)+(d2/2)*Math.log(d2)-lb+(d1/2-1)*Math.log(x)-((d1+d2)/2)*Math.log(d1*x+d2))}
+function tPdf(x,df){const lg=lgam((df+1)/2)-lgam(df/2)-.5*Math.log(df*Math.PI);return Math.exp(lg)*Math.pow(1+x*x/df,-(df+1)/2)}
+
+/* =================== formato =================== */
+function f(v,d=3){if(v==null||!isFinite(v))return '—';const a=Math.abs(v);if(a!==0&&(a>=1e6||a<1e-4))return v.toExponential(2);return v.toFixed(d)}
+const fp=p=>p==null||!isFinite(p)?'—':p<0.001?'< 0.001':p.toFixed(3);
+const tk=v=>{const r=Math.round(v*1e6)/1e6;return String(r)};
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function parseNum(v){if(v==null)return NaN;const s=String(v).trim();if(s==='')return NaN;let n=Number(s);if(isFinite(n))return n;n=Number(s.replace(',','.'));return isFinite(n)?n:NaN}
+function nice(min,max,n=6){const span=max-min||1,raw=span/n,p=Math.pow(10,Math.floor(Math.log10(raw))),m=raw/p,s=(m<1.5?1:m<3?2:m<7?5:10)*p;
+  const out=[];for(let v=Math.ceil(min/s-1e-9)*s;v<=max+1e-9;v+=s)out.push(+v.toFixed(10));return out}
+function dom(vals,pad=.06){let a=Math.min(...vals),b=Math.max(...vals);if(a===b){a-=1;b+=1}const d=(b-a)*pad;return[a-d,b+d]}
+
+/* =================== correlación =================== */
+function pearson(x,y){
+  const n=x.length,mx=mean(x),my=mean(y);
+  let sxy=0,sxx=0,syy=0;
+  for(let i=0;i<n;i++){sxy+=(x[i]-mx)*(y[i]-my);sxx+=(x[i]-mx)**2;syy+=(y[i]-my)**2}
+  return sxx>0&&syy>0?sxy/Math.sqrt(sxx*syy):NaN;
+}
+function rTest(r,n){const t=r*Math.sqrt((n-2)/Math.max(1e-12,1-r*r));return{p:tTwo(Math.abs(t),n-2),t,df:n-2}}
+function corrMatrix(X,y){
+  const cols=X[0].length+1;
+  const all=X.map((r,i)=>[...r,y[i]]);
+  const M=Array.from({length:cols},()=>new Array(cols).fill(0));
+  for(let i=0;i<cols;i++)for(let j=0;j<cols;j++)M[i][j]=pearson(all.map(r=>r[i]),all.map(r=>r[j]));
+  return M;
+}
+
+/* =================== diagnósticos =================== */
+function durbinWatson(e){let num=0,den=0;for(let i=0;i<e.length;i++){den+=e[i]*e[i];if(i>0)num+=(e[i]-e[i-1])**2}return den>0?num/den:NaN}
+function jarqueBera(e){
+  const n=e.length,m=mean(e);
+  const s2=sum(e.map(v=>(v-m)**2))/n,s=Math.sqrt(s2);
+  const S=sum(e.map(v=>((v-m)/s)**3))/n;
+  const K=sum(e.map(v=>((v-m)/s)**4))/n;
+  const JB=n/6*(S*S+(K-3)**2/4);
+  return{stat:JB,p:chiSf(JB,2),skew:S,kurt:K};
+}
+function breuschPagan(X,e){
+  const n=e.length,e2=e.map(v=>v*v);
+  try{const M=ols(X,e2);const LM=n*M.R2;return{LM,df:X[0].length-1,p:chiSf(LM,X[0].length-1)}}catch(err){return null}
+}
+function invNorm(p){
+  const a=[-3.969683028665376e+01,2.209460984245205e+02,-2.759285104469687e+02,1.383577518672690e+02,-3.066479806614716e+01,2.506628277459239e+00];
+  const b=[-5.447609879822406e+01,1.615858368580409e+02,-1.556989798598866e+02,6.680131188771972e+01,-1.328068155288572e+01];
+  const c=[-7.784894002430293e-03,-3.223964580411365e-01,-2.400758277161838e+00,-2.549732539343734e+00,4.374664141464968e+00,2.938163982698783e+00];
+  const d=[7.784695709041462e-03,3.224671290700398e-01,2.445134137142996e+00,3.754408661907416e+00];
+  const pl=.02425,ph=1-pl;let q,r;
+  if(p<pl){q=Math.sqrt(-2*Math.log(p));return (((((c[0]*q+c[1])*q+c[2])*q+c[3])*q+c[4])*q+c[5])/((((d[0]*q+d[1])*q+d[2])*q+d[3])*q+1)}
+  if(p<=ph){q=p-.5;r=q*q;return (((((a[0]*r+a[1])*r+a[2])*r+a[3])*r+a[4])*r+a[5])*q/(((((b[0]*r+b[1])*r+b[2])*r+b[3])*r+b[4])*r+1)}
+  q=Math.sqrt(-2*Math.log(1-p));return -(((((c[0]*q+c[1])*q+c[2])*q+c[3])*q+c[4])*q+c[5])/((((d[0]*q+d[1])*q+d[2])*q+d[3])*q+1);
+}
+function vifFor(X,j){
+  const xj=X.map(r=>r[j]),oth=X.map(r=>[1,...r.filter((_,q)=>q!==j)]);
+  try{const M=ols(oth,xj);return 1/Math.max(1e-12,1-M.R2)}catch(e){return NaN}
+}
+
+/* =================== gráficas SVG =================== */
+let uid=0;
+function st(o){return Object.entries(o).map(([k,v])=>`${k}:${v}`).join(';')}
+function Plot(o){
+  const m={l:54,r:14,t:12,b:44,...(o.m||{})},W=o.w||560,H=o.h||380,id='c'+(++uid);
+  const sx=x=>m.l+(x-o.xmin)/(o.xmax-o.xmin)*(W-m.l-m.r), sy=y=>H-m.b-(y-o.ymin)/(o.ymax-o.ymin)*(H-m.t-m.b);
+  const L=[];const P={sx,sy,W,H,m};
+  P.line=(pts,s)=>{L.push(`<polyline points="${pts.map(p=>sx(p[0]).toFixed(1)+','+sy(p[1]).toFixed(1)).join(' ')}" style="fill:none;${st(s)}"/>`);return P};
+  P.area=(up,lo,s)=>{const pts=[...up,...lo.slice().reverse()];L.push(`<polygon points="${pts.map(p=>sx(p[0]).toFixed(1)+','+sy(p[1]).toFixed(1)).join(' ')}" style="${st(s)}"/>`);return P};
+  P.seg=(x1,y1,x2,y2,s)=>{L.push(`<line x1="${sx(x1)}" y1="${sy(y1)}" x2="${sx(x2)}" y2="${sy(y2)}" style="${st(s)}"/>`);return P};
+  P.rect=(x1,y1,x2,y2,s)=>{const X=sx(Math.min(x1,x2)),Y=sy(Math.max(y1,y2));L.push(`<rect x="${X.toFixed(1)}" y="${Y.toFixed(1)}" width="${Math.abs(sx(x2)-sx(x1)).toFixed(1)}" height="${Math.abs(sy(y2)-sy(y1)).toFixed(1)}" style="${st(s)}"/>`);return P};
+  P.mark=(x,y,shape,r,s)=>{const X=sx(x),Y=sy(y);let e;
+    if(shape==='tri')e=`<polygon points="${X},${Y-r*1.2} ${X+r*1.1},${Y+r*.8} ${X-r*1.1},${Y+r*.8}" style="${st(s)}"/>`;
+    else if(shape==='sq')e=`<rect x="${X-r*.9}" y="${Y-r*.9}" width="${r*1.8}" height="${r*1.8}" style="${st(s)}"/>`;
+    else if(shape==='star'){const pts=[];for(let i=0;i<10;i++){const a=-Math.PI/2+i*Math.PI/5,rr=i%2?r*.5:r*1.4;pts.push((X+rr*Math.cos(a)).toFixed(1)+','+(Y+rr*Math.sin(a)).toFixed(1))}e=`<polygon points="${pts.join(' ')}" style="${st(s)}"/>`}
+    else e=`<circle cx="${X}" cy="${Y}" r="${r}" style="${st(s)}"/>`;L.push(e);return P};
+  P.text=(x,y,t,s='',anchor='start')=>{L.push(`<text x="${sx(x)}" y="${sy(y)}" text-anchor="${anchor}" style="${s}">${esc(t)}</text>`);return P};
+  P.raw=s=>{L.push(s);return P};
+  P.svg=()=>{const xt=o.xticks||nice(o.xmin,o.xmax,6),yt=o.yticks||nice(o.ymin,o.ymax,6);
+    let g=`<rect x="${m.l}" y="${m.t}" width="${W-m.l-m.r}" height="${H-m.t-m.b}" style="fill:var(--surface)"/>`;
+    for(const v of yt)g+=`<line x1="${m.l}" x2="${W-m.r}" y1="${sy(v)}" y2="${sy(v)}" style="stroke:var(--line);stroke-width:1"/><text x="${m.l-6}" y="${sy(v)+4}" text-anchor="end">${tk(v)}</text>`;
+    for(const v of xt)g+=`<line y1="${m.t}" y2="${H-m.b}" x1="${sx(v)}" x2="${sx(v)}" style="stroke:var(--line);stroke-width:1"/><text x="${sx(v)}" y="${H-m.b+16}" text-anchor="middle">${tk(v)}</text>`;
+    g+=`<rect x="${m.l}" y="${m.t}" width="${W-m.l-m.r}" height="${H-m.t-m.b}" style="fill:none;stroke:var(--muted);stroke-width:1"/>`;
+    g+=`<text x="${(m.l+W-m.r)/2}" y="${H-6}" text-anchor="middle" class="t">${esc(o.xl||'')}</text>`;
+    g+=`<text transform="translate(13 ${(m.t+H-m.b)/2}) rotate(-90)" text-anchor="middle" class="t">${esc(o.yl||'')}</text>`;
+    return `<svg class="plot" viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(o.title||'gráfica')}">${g}<clipPath id="${id}"><rect x="${m.l}" y="${m.t}" width="${W-m.l-m.r}" height="${H-m.t-m.b}"/></clipPath><g clip-path="url(#${id})">${L.join('')}</g></svg>`};
+  return P;
+}
+const legend=items=>`<div class="legend">${items.map(([c,t,sh])=>`<span><i style="background:${c};${sh==='line'?'height:3px;border-radius:0;width:16px;vertical-align:3px':sh==='band'?'border-radius:2px;opacity:.5':''}"></i>${t}</span>`).join('')}</div>`;
+const fig=(svg,cap,leg='')=>`<figure>${svg}${leg}<figcaption>${cap}</figcaption></figure>`;
+const KC=['var(--k1)','var(--k2)','var(--k3)','var(--a3)','var(--a4)','var(--muted)'];
+const KS=['circle','sq','tri','circle','sq','tri'];
+
+/* =================== modelos =================== */
+function ols(X,y){
+  const n=y.length,p=X[0].length;
+  if(n<=p)throw new Error(`Se necesitan más observaciones (${n}) que parámetros (${p}).`);
+  const Xt=T(X),A=matInv(mul(Xt,X));
+  if(!A)throw new Error('Los predictores son linealmente dependientes (multicolinealidad perfecta o una columna constante). Quita uno.');
+  const b=mulv(A,mulv(Xt,y)),yh=mulv(X,b),e=y.map((v,i)=>v-yh[i]);
+  const ybar=mean(y),SSE=dot(e,e),SST=sum(y.map(v=>(v-ybar)**2)),SSR=SST-SSE,dfe=n-p,MSE=SSE/dfe;
+  const R2=SST>0?1-SSE/SST:NaN,R2a=1-(1-R2)*(n-1)/dfe,F=p>1?(SSR/(p-1))/MSE:NaN;
+  const se=b.map((_,j)=>Math.sqrt(MSE*A[j][j])),t=b.map((v,j)=>v/se[j]),pv=t.map(v=>tTwo(Math.abs(v),dfe));
+  const h=X.map(r=>dot(r,mulv(A,r)));
+  return{n,p,k:p-1,b,A,yh,e,SSE,SST,SSR,dfe,MSE,s:Math.sqrt(MSE),R2,R2a,F,pF:p>1?fSf(F,p-1,dfe):NaN,se,t,pv,h,ybar};
+}
+const sigm=z=>z>=0?1/(1+Math.exp(-z)):Math.exp(z)/(1+Math.exp(z));
+const softp=z=>z>0?z+Math.log1p(Math.exp(-z)):Math.log1p(Math.exp(z));
+function solveSPD(H,g){const I=matInv(H);return I?mulv(I,g):null}
+function fitLogit(X,y){
+  const n=X.length,p=X[0].length;let b=new Array(p).fill(0);
+  const LL=bb=>{let s=0;for(let i=0;i<n;i++){const z=dot(X[i],bb);s+=y[i]?-softp(-z):-softp(z)}return s};
+  let L=LL(b);const hist=[{it:0,b:b.slice(),ll:L}];let conv=false,sep=false;
+  for(let it=1;it<=80;it++){
+    const g=new Array(p).fill(0),H=Array.from({length:p},()=>new Array(p).fill(0));
+    for(let i=0;i<n;i++){const pi=sigm(dot(X[i],b)),w=pi*(1-pi);for(let r=0;r<p;r++){g[r]+=(y[i]-pi)*X[i][r];for(let s=0;s<p;s++)H[r][s]+=w*X[i][r]*X[i][s]}}
+    for(let r=0;r<p;r++)H[r][r]+=1e-9;
+    const st_=solveSPD(H,g);if(!st_){sep=true;break}
+    let a=1,nb,Ln;for(let k=0;k<30;k++){nb=b.map((v,j)=>v+a*st_[j]);Ln=LL(nb);if(Ln>=L-1e-12)break;a/=2}
+    const mx=Math.max(...st_.map(v=>Math.abs(a*v)));b=nb;L=Ln;hist.push({it,b:b.slice(),ll:L});
+    if(mx<1e-8){conv=true;break}
+    if(Math.max(...b.map(Math.abs))>40){sep=true;break}
+  }
+  const ph=X.map(r=>sigm(dot(r,b)));
+  if(!sep&&ph.every((v,i)=>y[i]?v>.9999:v<1e-4))sep=true;
+  const H=Array.from({length:p},()=>new Array(p).fill(0));
+  for(let i=0;i<n;i++){const w=ph[i]*(1-ph[i]);for(let r=0;r<p;r++)for(let s=0;s<p;s++)H[r][s]+=w*X[i][r]*X[i][s]}
+  const cov=matInv(H.map((r,i)=>r.map((v,j)=>v+(i===j?1e-9:0))))||H.map(r=>r.map(()=>NaN));
+  const se=b.map((_,j)=>Math.sqrt(cov[j][j])),z=b.map((v,j)=>v/se[j]),pz=z.map(v=>zTwo(Math.abs(v)));
+  const n1=sum(y),n0=n-n1,ll0=(n1?n1*Math.log(n1/n):0)+(n0?n0*Math.log(n0/n):0);
+  const G=2*(L-ll0),df=p-1;
+  return{n,p,k:p-1,b,hist,conv,sep,ph,se,z,pz,ll:L,ll0,G,df,pG:chiSf(G,df),mcf:1-L/ll0,AIC:-2*L+2*p,dev:-2*L,dev0:-2*ll0,n1,n0};
+}
+function fitMulti(X,yi,K){
+  const n=X.length,p=X[0].length,dim=(K-1)*p;let B=new Array(dim).fill(0);
+  const probs=(B,x)=>{const z=[0];for(let j=1;j<K;j++)z.push(dot(B.slice((j-1)*p,j*p),x));const m=Math.max(...z),e=z.map(v=>Math.exp(v-m)),s=sum(e);return e.map(v=>v/s)};
+  const LL=B=>{let s=0;for(let i=0;i<n;i++)s+=Math.log(Math.max(probs(B,X[i])[yi[i]],1e-300));return s};
+  let L=LL(B);const hist=[{it:0,ll:L}];let conv=false,sep=false;
+  for(let it=1;it<=100;it++){
+    const g=new Array(dim).fill(0),A=Array.from({length:dim},()=>new Array(dim).fill(0));
+    for(let i=0;i<n;i++){const pr=probs(B,X[i]),x=X[i];
+      for(let j=1;j<K;j++){const c=(yi[i]===j?1:0)-pr[j];for(let r=0;r<p;r++)g[(j-1)*p+r]+=c*x[r];
+        for(let m=1;m<K;m++){const w=pr[j]*((j===m?1:0)-pr[m]);for(let r=0;r<p;r++)for(let s=0;s<p;s++)A[(j-1)*p+r][(m-1)*p+s]+=w*x[r]*x[s]}}}
+    for(let r=0;r<dim;r++)A[r][r]+=1e-9;
+    const stp=solveSPD(A,g);if(!stp){sep=true;break}
+    let a=1,nb,Ln;for(let k=0;k<30;k++){nb=B.map((v,j)=>v+a*stp[j]);Ln=LL(nb);if(Ln>=L-1e-12)break;a/=2}
+    const mx=Math.max(...stp.map(v=>Math.abs(a*v)));B=nb;L=Ln;hist.push({it,ll:L});
+    if(mx<1e-8){conv=true;break}
+    if(Math.max(...B.map(Math.abs))>40){sep=true;break}
+  }
+  const A=Array.from({length:dim},()=>new Array(dim).fill(0));
+  for(let i=0;i<n;i++){const pr=probs(B,X[i]),x=X[i];for(let j=1;j<K;j++)for(let m=1;m<K;m++){const w=pr[j]*((j===m?1:0)-pr[m]);for(let r=0;r<p;r++)for(let s=0;s<p;s++)A[(j-1)*p+r][(m-1)*p+s]+=w*x[r]*x[s]}}
+  const cov=matInv(A.map((r,i)=>r.map((v,j)=>v+(i===j?1e-9:0))));
+  const se=B.map((_,j)=>cov?Math.sqrt(cov[j][j]):NaN),z=B.map((v,j)=>v/se[j]),pz=z.map(v=>zTwo(Math.abs(v)));
+  const cnt=new Array(K).fill(0);yi.forEach(v=>cnt[v]++);
+  const ll0=sum(cnt.map(c=>c?c*Math.log(c/n):0)),G=2*(L-ll0),df=(K-1)*(p-1);
+  const P=X.map(x=>probs(B,x)),pred=P.map(r=>r.indexOf(Math.max(...r)));
+  const CM=Array.from({length:K},()=>new Array(K).fill(0));yi.forEach((t,i)=>CM[t][pred[i]]++);
+  if(!sep&&Math.max(...B.map(Math.abs))>25)sep=true;
+  return{n,p,K,B,probs:x=>probs(B,x),hist,conv,sep,se,z,pz,ll:L,ll0,G,df,pG:chiSf(G,df),mcf:1-L/ll0,AIC:-2*L+2*dim,P,pred,CM,cnt,dim};
+}
+function confusion(y,ph,thr){let TP=0,TN=0,FP=0,FN=0;y.forEach((v,i)=>{const yh=ph[i]>=thr?1:0;if(v&&yh)TP++;else if(!v&&!yh)TN++;else if(!v&&yh)FP++;else FN++});
+  const d=(a,b)=>b?a/b:NaN,prec=d(TP,TP+FP),rec=d(TP,TP+FN);
+  return{TP,TN,FP,FN,acc:(TP+TN)/y.length,prec,rec,spec:d(TN,TN+FP),f1:2*prec*rec/(prec+rec),fpr:d(FP,FP+TN)}}
+function roc(y,ph){const idx=ph.map((_,i)=>i).sort((a,b)=>ph[b]-ph[a]),P=sum(y),N=y.length-P;let tp=0,fp=0;const pts=[[0,0]];let i=0;
+  while(i<idx.length){const v=ph[idx[i]];while(i<idx.length&&ph[idx[i]]===v){y[idx[i]]?tp++:fp++;i++}pts.push([N?fp/N:0,P?tp/P:0])}
+  let auc=0;for(let j=1;j<pts.length;j++)auc+=(pts[j][0]-pts[j-1][0])*(pts[j][1]+pts[j-1][1])/2;return{pts,auc}}
+
+/* =================== ejemplos =================== */
+const EX={
+ 1:{header:['usuarios_cientos','tiempo_ms'],
+    rows:[['1','112'],['2','130'],['3','149'],['4','172'],['5','184'],['6','209'],['7','221'],['8','247'],['9','258'],['10','286']],
+    y:'tiempo_ms',preds:['usuarios_cientos'],nuevo:{usuarios_cientos:'7.5'},objetivo:'250',
+    ctx:'Tema 1 · Tiempo de respuesta de una API REST (ms) según usuarios concurrentes (en cientos). Predice con 750 usuarios y calcula cuántos usuarios soporta un SLA de 250 ms.'},
+ 2:{header:['distancia','saltos','rtt_ms'],
+    rows:[['2.5','6','9.9'],['5','5','11.8'],['8','9','17.8'],['12','7','19.4'],['3','10','13.5'],['15','11','25.9'],['6','5','12.6'],['10','8','20.5'],['18','12','30.3'],['4','4','9'],['14','6','21.9'],['20','13','34.1']],
+    y:'rtt_ms',preds:['distancia','saltos'],nuevo:{distancia:'10',saltos:'8'},
+    ctx:'Tema 2 · Latencia RTT (ms) de 12 rutas según distancia y número de saltos (routers).'},
+ 3:{header:['cpu_decenas','falla'],
+    rows:[['5','0'],['5.5','0'],['6','0'],['6.2','0'],['6.8','0'],['7','1'],['7.4','0'],['7.8','0'],['8','1'],['8.3','0'],['8.6','1'],['9','1'],['9.4','1'],['9.8','1']],
+    y:'falla',preds:['cpu_decenas'],nuevo:{cpu_decenas:'8.5'},
+    ctx:'Tema 3 · Falla del servidor (1 = falla) según el uso sostenido de CPU (en decenas de %: 8.5 = 85 %).'},
+ 4:{header:['urls','urgencia','phishing'],
+    rows:[['5','8','1'],['1','3','0'],['2','7','1'],['5','3','0'],['1','2','0'],['1','0','0'],['6','7','1'],['2','5','0'],['6','4','1'],['3','1','0'],['5','5','1'],['0','4','0'],['0','1','0'],['2','2','0'],['2','3','1'],['3','8','1'],['4','6','1'],['4','5','0'],['8','6','1'],['7','9','1']],
+    y:'phishing',preds:['urls','urgencia'],nuevo:{urls:'5',urgencia:'6'},
+    ctx:'Tema 4 · Correos phishing (1) o legítimos (0) según número de URLs y puntaje de urgencia.'},
+ 5:{header:['tam_paquete','paquetes_s','tipo'],
+    rows:[['13.2','10.6','Video'],['3.0','4.9','Web'],['4.1','3.6','Web'],['7.6','3.2','Web'],['2.3','4.8','VoIP'],['2.6','5.3','VoIP'],['8.6','6.1','Video'],['6.8','2.2','Web'],['9.1','8.0','Video'],['12.1','6.6','Video'],['5.0','1.6','Web'],['3.1','5.6','VoIP'],['4.2','3.0','VoIP'],['11.6','8.6','Video'],['3.4','2.1','Web'],['1.7','5.9','VoIP'],['1.5','4.6','VoIP'],['2.0','6.3','VoIP'],['12.6','9.0','Video'],['5.6','2.9','Web'],['2.9','4.1','VoIP'],['11.1','10.1','Video'],['7.2','4.4','Video'],['10.2','9.4','Video'],['2.1','5.6','VoIP'],['2.6','1.2','Web'],['6.2','4.1','Web'],['1.9','5.1','VoIP'],['10.6','7.1','Video'],['8.3','5.2','Web']],
+    y:'tipo',preds:['tam_paquete','paquetes_s'],nuevo:{tam_paquete:'9',paquetes_s:'6'},ref:'Web',
+    ctx:'Tema 5 · Tipo de tráfico (Web, Video, VoIP) según tamaño medio de paquete (cientos de bytes) y paquetes por segundo (decenas).'}
+};
+const TABS=[
+ {id:1,name:'Lineal simple',cv:'--a1',single:true},
+ {id:2,name:'Lineal múltiple',cv:'--a2'},
+ {id:3,name:'Logística',cv:'--a3',single:true},
+ {id:4,name:'Logística binaria',cv:'--a4'},
+ {id:5,name:'Multinomial',cv:'--a5'}];
+
+const S={}; let cur=1;
+function initState(t){const e=EX[t];S[t]={header:[...e.header],rows:e.rows.map(r=>[...r]),y:e.y,preds:[...e.preds],nuevo:{...e.nuevo},objetivo:e.objetivo??'',thr:.5,ref:e.ref||'',pos:'',conf:.95,ctx:e.ctx}}
+TABS.forEach(t=>initState(t.id));
+
+const CTXGUIDE={
+ 1:[['Y (respuesta)','Variable numérica que se explica o predice.'],['X (predictor)','Variable numérica usada para explicar Y.'],['b₀ (intercepto)','Valor medio esperado de Y cuando X = 0.'],['b₁ (pendiente)','Cuánto cambia Y, en promedio, por +1 en X.'],['r de Pearson','Fuerza y signo de la relación lineal (−1 a 1).'],['R²','Proporción de la variación de Y explicada por el modelo.'],['s<sub>e</sub>','Desviación típica de los residuos.'],['p-valor','Probabilidad de observar un efecto así si el real fuera 0.'],['F crítica','Umbral de F para α dado; si F > Fc se rechaza H₀.']],
+ 2:[['Y','Variable numérica que se predice.'],['X₁, X₂…','Predictores numéricos; cada coeficiente se lee “con los demás fijos”.'],['b<sub>j</sub>','Cambio medio de Y por +1 en X<sub>j</sub> manteniendo el resto constante.'],['β estandarizado','Efecto en desviaciones estándar; permite comparar magnitudes.'],['R² ajustado','R² corregido por el número de predictores.'],['F y su p-valor','Prueba global del modelo.'],['F crítica','Umbral de rechazo de H₀ global.'],['VIF','Mide colinealidad. > 5 preocupa; > 10 es grave.'],['Palanca h','Cuán atípico es un caso en los predictores.']],
+ 3:[['p','Probabilidad estimada de la clase 1.'],['log-odds (b)','Coeficientes en escala logit.'],['OR = eᵇ','Razón de momios por +1 en el predictor.'],['Curva sigmoide','Forma en S de la probabilidad estimada.'],['Umbral u','p ≥ u ⇒ clase 1.'],['G y p-valor','Prueba global de razón de verosimilitudes.']],
+ 4:[['p y OR','Probabilidad estimada y razón de momios.'],['Matriz de confusión','VP, VN, FP, FN.'],['Exactitud','Fracción de aciertos.'],['Sensibilidad / Especificidad','Detección de positivos / negativos.'],['Precisión y F1','Calidad de las predicciones positivas.'],['AUC','Área bajo la curva ROC.'],['VIF','Colinealidad entre predictores.']],
+ 5:[['Categoría de referencia','Clase contra la que se comparan las demás.'],['Logit multinomial','Una ecuación ln(P(clase)/P(ref)) por clase.'],['RRR = eᵇ','Factor de cambio de P(clase)/P(ref).'],['Softmax','Convierte puntuaciones en probabilidades que suman 1.'],['Matriz K×K','Clase real vs. predicha.'],['F1 por clase','Calidad de detección de cada clase.']]
+};
+
+/* =================== interfaz =================== */
+const $=s=>document.querySelector(s);
+
+function buildTabs(){
+  $('#tabs').innerHTML=TABS.map(t=>`<button type="button" role="tab" data-t="${t.id}" aria-selected="${t.id===cur}" style="--c:var(${t.cv})"><b>${t.id}</b>${t.name}</button>`).join('');
+  $('#tabs').querySelectorAll('button').forEach(b=>b.onclick=()=>{cur=+b.dataset.t;buildTabs();buildPanel();solve();});
+  $('#app').style.setProperty('--acc',`var(${TABS[cur-1].cv})`);
+}
+function currentHeaders(){const s=S[cur];return Array.isArray(s.header)?s.header:[]}
+function classList(){const s=S[cur],j=s.header.indexOf(s.y);if(j<0)return [];
+  const u=[...new Set(s.rows.map(r=>String(r[j]??'').trim()).filter(v=>v!==''))];
+  if(cur!==5&&u.every(v=>!isNaN(Number(v))))u.sort((a,b)=>Number(a)-Number(b));
+  return u;}
+function posClass(){const s=S[cur],c=classList();return c.includes(s.pos)?s.pos:c[c.length-1]}
+
+function dataset(){
+  const s=S[cur];
+  if(!s.header.length)throw new Error('No hay datos en la tabla. Agrega filas y columnas, o carga un ejemplo.');
+  if(!s.preds.length)throw new Error('Elige al menos un predictor (X).');
+  const yj=s.header.indexOf(s.y);
+  if(yj<0)throw new Error('La variable respuesta Y no está en la tabla.');
+  const pj=s.preds.map(h=>s.header.indexOf(h));
+  if(pj.some(j=>j<0))throw new Error('Algún predictor no está en la tabla.');
+  const X=[],yraw=[];let drop=0;
+  s.rows.forEach(r=>{
+    const xs=pj.map(j=>parseNum(r[j]));
+    if(xs.some(isNaN)||String(r[yj]??'').trim()===''){drop++;return}
+    X.push(xs);yraw.push(String(r[yj]).trim());
+  });
+  if(!X.length)throw new Error('No hay filas con todos los valores numéricos en los predictores.');
+  return{X,yraw,drop,names:s.preds,yname:s.y};
+}
+const nuevoX=names=>names.map(h=>parseNum(S[cur].nuevo[h]??''));
+
+let solveT=null;
+function debounceSolve(ms=350){clearTimeout(solveT);solveT=setTimeout(solve,ms)}
+
+function renderGrid(){
+  const s=S[cur],host=$('#grid');
+  if(!host)return;
+  if(!s.header.length){
+    host.innerHTML=`<div class="emptyGrid">Sin datos. Pulsa <b>+ Columna</b> y <b>+ Fila</b> para empezar, o <b>Cargar ejemplo</b>.</div>`;
+    updateGridInfo();return;
+  }
+  const nCols=s.header.length;
+  let h='<table class="grid"><colgroup><col style="width:32px">';
+  for(let j=0;j<nCols;j++)h+='<col>';
+  h+='</colgroup><thead><tr><th class="ix"><span>#</span></th>';
+  s.header.forEach((v,j)=>{h+=`<th><input type="text" data-h="${j}" value="${esc(v)}" placeholder="var${j+1}" spellcheck="false" aria-label="Nombre de columna ${j+1}"></th>`});
+  h+='</tr></thead><tbody>';
+  s.rows.forEach((r,i)=>{
+    h+=`<tr><td class="ix"><span>${i+1}</span></td>`;
+    for(let j=0;j<nCols;j++){
+      const v=r[j]??'';
+      h+=`<td><input type="text" data-r="${i}" data-c="${j}" value="${esc(v)}" spellcheck="false" aria-label="Fila ${i+1}, columna ${j+1}"></td>`;
+    }
+    h+='</tr>';
+  });
+  h+='</tbody></table>';
+  host.innerHTML=h;
+  host.querySelectorAll('thead input').forEach(inp=>{
+    inp.addEventListener('change',()=>{const j=+inp.dataset.h;S[cur].header[j]=inp.value.trim()||('var'+(j+1));buildPanel();solve()});
+    inp.addEventListener('keydown',e=>{if(e.key==='Enter')inp.blur()});
+  });
+  host.querySelectorAll('tbody input').forEach(inp=>{
+    inp.addEventListener('input',()=>{const i=+inp.dataset.r,j=+inp.dataset.c;if(!S[cur].rows[i])S[cur].rows[i]=[];S[cur].rows[i][j]=inp.value;debounceSolve()});
+    inp.addEventListener('keydown',e=>{
+      const i=+inp.dataset.r,j=+inp.dataset.c;
+      const move=(di,dj)=>{const ni=i+di,nj=j+dj;const next=host.querySelector(`input[data-r="${ni}"][data-c="${nj}"]`);if(next){e.preventDefault();next.focus();next.select()}};
+      if(e.key==='Enter'){e.preventDefault();move(1,0)}
+      else if(e.key==='ArrowDown'){move(1,0)}
+      else if(e.key==='ArrowUp'){move(-1,0)}
+      else if(e.key==='ArrowRight'&&inp.selectionStart===inp.value.length){move(0,1)}
+      else if(e.key==='ArrowLeft'&&inp.selectionStart===0){move(0,-1)}
+    });
+  });
+  updateGridInfo();
+}
+function updateGridInfo(){const el=$('#gridinfo'),s=S[cur];if(el)el.textContent=s.header.length?`${s.rows.length} filas × ${s.header.length} columnas`:'Sin datos'}
+
+function buildPanel(){
+  const s=S[cur],tab=TABS[cur-1],hs=currentHeaders();
+  if(hs.length){
+    if(!hs.includes(s.y))s.y=hs[hs.length-1];
+    s.preds=s.preds.filter(h=>hs.includes(h)&&h!==s.y);
+    if(!s.preds.length)s.preds=hs.filter(h=>h!==s.y).slice(0,tab.single?1:hs.length);
+  }
+  const opts=hs.map(h=>`<option ${h===s.y?'selected':''}>${esc(h)}</option>`).join('');
+  const chks=hs.filter(h=>h!==s.y).map(h=>`<label><input type="${tab.single?'radio':'checkbox'}" name="pr" value="${esc(h)}" ${s.preds.includes(h)?'checked':''}>${esc(h)}</label>`).join('');
+  const nuevos=s.preds.map(h=>`<div><label for="n_${esc(h)}">${esc(h)}</label><input type="text" inputmode="decimal" id="n_${esc(h)}" data-n="${esc(h)}" value="${esc(s.nuevo[h]??'')}"></div>`).join('');
+  const csvText=[s.header,...s.rows].map(r=>r.join(',')).join('\n');
+
+  $('#panel').innerHTML=`
+    <h2>Datos del ejercicio <small>edita cada celda</small></h2>
+    <div class="dataSection">
+      <div class="secTitle"><b>Tabla de datos</b><small>Los encabezados son los nombres de las variables</small></div>
+      <div class="gridtools">
+        <button class="btn" id="addRow" type="button">+ Fila</button>
+        <button class="btn" id="addCol" type="button">+ Columna</button>
+        <button class="btn" id="delRow" type="button">− Fila</button>
+        <button class="btn" id="delCol" type="button">− Columna</button>
+        <span class="info" id="gridinfo"></span>
+      </div>
+      <div class="gridbox"><div class="gridscroll" id="grid"></div></div>
+      <p class="hint">Haz clic en cualquier celda para editarla. Enter y las flechas mueven la selección.</p>
+    </div>
+    <div>
+      <label for="ctxin">Contexto del ejercicio (qué representan los datos y para qué se analizan)</label>
+      <textarea id="ctxin" class="ctxin" spellcheck="true">${esc(s.ctx)}</textarea>
+    </div>
+    <div class="row">
+      <button class="btn" id="ex" type="button">Cargar ejemplo de la guía</button>
+      <button class="btn" id="clr" type="button">Vaciar datos</button>
+    </div>
+    <div><label for="ysel">Variable respuesta (Y)</label><select id="ysel">${opts}</select></div>
+    <div><label>${tab.single?'Predictor (X)':'Predictores (X)'}</label><div class="chk" id="pr">${chks||'<span class="hint">Agrega datos para elegir.</span>'}</div></div>
+    ${cur===5?`<div><label for="ref">Categoría de referencia</label><select id="ref">${classList().map(c=>`<option ${c===s.ref?'selected':''}>${esc(c)}</option>`).join('')}</select></div>`:''}
+    ${(cur===3||cur===4)?`<div><label for="pos">Clase que se modela como 1 (éxito)</label><select id="pos">${classList().map(c=>`<option ${c===posClass()?'selected':''}>${esc(c)}</option>`).join('')}</select></div>
+      <div><label for="thr">Umbral de decisión u = <span class="mono" id="thrv">${s.thr.toFixed(2)}</span></label><div class="sl"><input type="range" id="thr" min="0.05" max="0.95" step="0.01" value="${s.thr}"></div></div>`:''}
+    ${cur<=2?`<div><label for="conf">Nivel de confianza</label><select id="conf">${[.9,.95,.99].map(c=>`<option value="${c}" ${c===s.conf?'selected':''}>${c*100} %</option>`).join('')}</select></div>`:''}
+    <div><label>Caso nuevo (para predecir)</label><div class="row">${nuevos}</div></div>
+    ${cur===1?`<div><label for="obj">Valor objetivo de Y (para despejar X, p. ej. el SLA)</label><input type="text" inputmode="decimal" id="obj" value="${esc(s.objetivo)}"></div>`:''}
+    <details class="csvToggle">
+      <summary>Importar / exportar CSV</summary>
+      <textarea id="txt" spellcheck="false" placeholder="Pega un CSV: encabezados en la primera fila, separa con coma, punto y coma o tabulador.">${esc(csvText)}</textarea>
+      <p class="hint">Al pegar aquí, la tabla de arriba se reemplaza automáticamente.</p>
+    </details>`;
+
+  renderGrid();
+  const cx=$('#ctxin');if(cx)cx.oninput=()=>{s.ctx=cx.value;debounceSolve(400)};
+  const tx=$('#txt');
+  if(tx)tx.oninput=()=>{
+    const lines=tx.value.split(/\r?\n/).filter(l=>l.trim()!=='');
+    if(!lines.length){s.header=[];s.rows=[];renderGrid();debounceSolve(400);return}
+    const first=lines[0];
+    const sep=first.includes('\t')?'\t':first.includes(';')?';':',';
+    const all=lines.map(l=>l.split(sep).map(x=>x.trim()));
+    const nCols=Math.max(...all.map(r=>r.length));
+    const pad=r=>{const c=r.slice();while(c.length<nCols)c.push('');return c};
+    s.header=pad(all[0]);s.rows=all.slice(1).map(pad);
+    renderGrid();debounceSolve(400);
+  };
+  $('#addRow').onclick=()=>{if(!s.header.length){s.header=['x1','y'];s.rows=[['','']]}else s.rows.push(s.header.map(()=>''));buildPanel();solve()};
+  $('#addCol').onclick=()=>{if(!s.header.length){s.header=['x1','y'];s.rows=[['','']]}else{s.header.push('var'+(s.header.length+1));s.rows.forEach(r=>r.push(''))}buildPanel();solve()};
+  $('#delRow').onclick=()=>{if(s.rows.length)s.rows.pop();buildPanel();solve()};
+  $('#delCol').onclick=()=>{if(s.header.length>1){s.header.pop();s.rows.forEach(r=>r.pop())}buildPanel();solve()};
+  $('#ex').onclick=()=>{initState(cur);buildPanel();solve()};
+  $('#clr').onclick=()=>{s.header=[];s.rows=[];s.preds=[];s.nuevo={};buildPanel();solve()};
+  $('#ysel').onchange=e=>{s.y=e.target.value;s.preds=[];s.ref='';s.pos='';buildPanel();solve()};
+  $('#pr').querySelectorAll('input').forEach(i=>i.onchange=()=>{s.preds=[...$('#pr').querySelectorAll('input:checked')].map(x=>x.value);buildPanel();solve()});
+  document.querySelectorAll('[data-n]').forEach(i=>i.oninput=()=>{s.nuevo[i.dataset.n]=i.value;solve()});
+  const r=$('#ref');if(r)r.onchange=()=>{s.ref=r.value;solve()};
+  const po=$('#pos');if(po)po.onchange=()=>{s.pos=po.value;solve()};
+  const th=$('#thr');if(th)th.oninput=()=>{s.thr=+th.value;$('#thrv').textContent=s.thr.toFixed(2);solve()};
+  const cf=$('#conf');if(cf)cf.onchange=()=>{s.conf=+cf.value;solve()};
+  const ob=$('#obj');if(ob)ob.oninput=()=>{s.objetivo=ob.value;solve()};
+}
+
+/* =================== resultados =================== */
+function ctxCard(){
+  const s=S[cur],g=CTXGUIDE[cur]||[];
+  const txt=String(s.ctx||'').trim();
+  return `<div class="card ctxnote"><h3>Contexto del ejercicio</h3>
+    ${txt?`<p>${esc(txt).replace(/\n/g,'<br>')}</p>`:`<p class="hint">Escribe el contexto del ejercicio en el panel izquierdo.</p>`}
+    <details><summary>¿Qué significa cada cosa en los resultados?</summary><dl>${g.map(([a,b])=>`<dt>${a}</dt><dd>${b}</dd>`).join('')}</dl></details></div>`;
+}
+const conclCard=items=>`<div class="card concl"><h3>Conclusiones</h3><ul>${items.map(t=>`<li>${t}</li>`).join('')}</ul></div>`;
+
+function solve(){
+  const out=$('#out');
+  after=()=>{};
+  try{
+    const D=dataset();
+    out.innerHTML=ctxCard()+({1:rOLS,2:rOLS,3:rBin,4:rBin,5:rMulti}[cur])(D);
+    after();
+    addChartButtons();
+  }catch(e){out.innerHTML=`<div class="err"><b>No se pudo resolver.</b> ${esc(e.message)}</div>`;console.warn(e)}
+}
+let after=()=>{};
+const tile=(v,l)=>`<div class="tile"><div class="v">${v}</div><div class="l">${l}</div></div>`;
+const tbl=(head,rows,cls='')=>`<div class="tw"><table class="${cls}"><thead><tr>${head.map(h=>`<th>${h}</th>`).join('')}</tr></thead><tbody>${rows.join('')}</tbody></table></div>`;
+const tr=(cells,cls='')=>`<tr class="${cls}">${cells.map(c=>`<td${c&&c.cls?` class="${c.cls}"`:''}>${c&&c.cls?c.v:c}</td>`).join('')}</tr>`;
+const dl=items=>`<details><summary>¿Qué significa cada columna?</summary><dl>${items.map(([a,b])=>`<dt>${a}</dt><dd>${b}</dd>`).join('')}</dl></details>`;
+const sigp=p=>p<0.05?{cls:'sig',v:fp(p)}:fp(p);
+function warnDrop(D){return D.drop?`<div class="warn">Se omitieron ${D.drop} fila(s) con valores vacíos o no numéricos en los predictores.</div>`:''}
+
+/* Doble forma de la ecuación */
+function eqSimple(names,b,yn){
+  const norm='Y = b₀' + names.map((_,j)=>` + b${j+1}X${j+1}`).join('');
+  let fit=`${esc(yn)} = ${f(b[0],4)}`;
+  names.forEach((nm,j)=>{fit+=` ${b[j+1]<0?'−':'+'} ${f(Math.abs(b[j+1]),4)}·${esc(nm)}`});
+  return {norm,fit};
+}
+function eqLogit(names,b){
+  const norm='ln(p / (1 − p)) = b₀' + names.map((_,j)=>` + b${j+1}X${j+1}`).join('');
+  let fit=`ln(p/(1−p)) = ${f(b[0],4)}`;
+  names.forEach((nm,j)=>{fit+=` ${b[j+1]<0?'−':'+'} ${f(Math.abs(b[j+1]),4)}·${esc(nm)}`});
+  return {norm,fit};
+}
+
+/* ---------- Conclusiones: regresión lineal ---------- */
+function conclOLS(D,M,conf,tc,Fc,pred){
+  const k=D.names.length,items=[];
+  items.push(`Se ajustó una regresión lineal ${k>1?'múltiple':'simple'} con n = ${M.n} observaciones${D.drop?` (se omitieron ${D.drop})`:''}; Y = <b>${esc(D.yname)}</b> y X = ${D.names.map(t=>`<b>${esc(t)}</b>`).join(', ')}.`);
+  items.push(`Modelo ajustado: <span class="mono">${eqSimple(D.names,M.b,D.yname).fit}</span>.`);
+  items.push(M.pF<0.05
+    ?`El modelo es <b>globalmente significativo</b> (F = ${f(M.F,2)} > Fc = ${f(Fc,3)}; p ${M.pF<0.001?'< 0.001':'= '+f(M.pF,3)}): en conjunto los predictores explican a Y mejor que su media.`
+    :`El modelo <b>no</b> es globalmente significativo (F = ${f(M.F,2)} ≤ Fc = ${f(Fc,3)}; p = ${f(M.pF,3)}).`);
+  items.push(`R² = ${f(M.R2,3)} ⇒ explica el <b>${f(M.R2*100,1)} %</b> de la variación de ${esc(D.yname)}; s<sub>e</sub> = ${f(M.s,3)}.`);
+  if(k===1){
+    const r=pearson(D.X.map(r=>r[0]),D.yraw.map(parseNum));
+    const rt=rTest(r,M.n);
+    items.push(`Correlación lineal r = <b>${f(r,3)}</b> (${r>=0?'positiva':'negativa'}), prueba t(${rt.df}) = ${f(rt.t,2)}, p ${rt.p<0.001?'< 0.001':'= '+f(rt.p,3)}: ${rt.p<0.05?'relación lineal <b>significativa</b>':'no significativa'}.`);
+  }
+  const sig=D.names.map((t,j)=>({t,b:M.b[j+1],p:M.pv[j+1],lo:M.b[j+1]-tc*M.se[j+1],hi:M.b[j+1]+tc*M.se[j+1]})).filter(o=>o.p<0.05);
+  if(sig.length)items.push(`Coeficientes significativos: ${sig.map(o=>`<b>${esc(o.t)}</b> (b = ${f(o.b,3)}; IC ${conf*100}%: ${f(o.lo,3)} a ${f(o.hi,3)})`).join('; ')}.`);
+  else items.push(`Ningún coeficiente individual resulta significativo al ${(1-conf)*100} % de confianza.`);
+  if(pred)items.push(`Predicción para ${D.names.map((t,j)=>`${esc(t)} = ${f(pred.x0[j],3)}`).join(', ')}: <b class="mono">ŷ = ${f(pred.yh,3)}</b> (IC ${conf*100}% de la media: ${f(pred.lo,3)} a ${f(pred.hi,3)}).`);
+  if(pred&&pred.obj!==null&&!isNaN(pred.obj))items.push(`Para Y = ${f(pred.obj,3)} ⇒ X = <b>${f(pred.xo,3)}</b>${pred.extrap?' (extrapolación)':''}.`);
+  items.push(`<span class="hint">Verifica los supuestos en la sección correspondiente antes de generalizar.</span>`);
+  return conclCard(items);
+}
+
+/* ---------- Hipótesis y prueba gráfica (F) ---------- */
+function fTestPlot(M,conf){
+  const alpha=1-conf;
+  const d1=M.p-1,d2=M.dfe;
+  const Fc=fCrit(alpha,d1,d2);
+  const xmax=Math.max(Fc*2.2,M.F*1.3,5);
+  const N=180,xs=Array.from({length:N+1},(_,i)=>xmax*i/N);
+  const ys=xs.map(x=>fPdf(x,d1,d2));
+  const ymax=Math.max(...ys)*1.15;
+  const P=Plot({xmin:0,xmax:xmax,ymin:0,ymax:ymax,xl:`F(${d1}, ${d2})`,yl:'Densidad',w:560,h:260});
+  P.line(xs.map((x,i)=>[x,ys[i]]),{stroke:'var(--acc)','stroke-width':2});
+  const cr=xs.filter(x=>x>=Fc);
+  if(cr.length>1)P.area(cr.map(x=>[x,fPdf(x,d1,d2)]),cr.map(x=>[x,0]),{fill:'var(--bad)',opacity:.28});
+  P.seg(Fc,0,Fc,ymax,{stroke:'var(--bad)','stroke-dasharray':'4 3','stroke-width':1.4});
+  P.text(Fc,ymax*0.93,`Fc=${f(Fc,3)}`,'text-anchor:start;fill:var(--bad);font-size:10px;font-weight:600');
+  if(isFinite(M.F)&&M.F<=xmax){
+    const fY=fPdf(M.F,d1,d2);
+    P.seg(M.F,0,M.F,fY,{stroke:'var(--ink)','stroke-width':2});
+    P.text(M.F,fY*1.05,`F=${f(M.F,2)}`,'text-anchor:middle;fill:var(--ink);font-weight:600;font-size:10px');
+  }
+  return P.svg();
+}
+function hypBoxOLS(D,M,conf,Fc){
+  const k=D.names.length,alpha=1-conf;
+  return `<div class="hypbox">
+    <p><b>H₀:</b> ${k>1?'β₁ = β₂ = … = β'+k+' = 0':'β₁ = 0'} — no hay relación lineal entre ${D.names.map(t=>`<em>${esc(t)}</em>`).join(', ')} y <em>${esc(D.yname)}</em>.</p>
+    <p><b>H₁:</b> ${k>1?'al menos un βⱼ ≠ 0':'β₁ ≠ 0'} — sí existe relación lineal.</p>
+    <p><b>Estadístico:</b> F = ${f(M.F,3)}; <b>F crítico</b> al ${(alpha*100).toFixed(0)} % con (${k}, ${M.dfe}) gl = ${f(Fc,3)}.</p>
+    <p><b>Decisión:</b> como F ${M.F>Fc?'>':'≤'} Fc, <b>${M.F>Fc?'se rechaza H₀':'no se rechaza H₀'}</b> (p ${M.pF<0.001?'< 0.001':'= '+f(M.pF,3)}). ${M.F>Fc?'En el contexto: los predictores, en conjunto, sí se asocian con '+esc(D.yname)+'.':'En el contexto: no hay evidencia suficiente de asociación lineal.'}</p>
+  </div>`;
+}
+
+/* ---------- Correlaciones y comparación de predictores ---------- */
+function corrCard(D){
+  if(cur===1){
+    const r=pearson(D.X.map(x=>x[0]),D.yraw.map(parseNum));
+    const rt=rTest(r,D.X.length);
+    const P=Plot({xmin:-1.02,xmax:1.02,ymin:-1.02,ymax:1.02,xl:'r teórica',yl:'Residuos estandarizados'});
+    P.seg(-1,-1,1,1,{stroke:'var(--muted)','stroke-dasharray':'3 3'});
+    return `<div class="card"><h3>Correlación lineal</h3>
+      <div class="tiles">${tile(f(r,3),'r de Pearson')}${tile(f(r*r,3),'r² = R²')}${tile(f(rt.t,2),`t (gl = ${rt.df})`)}${tile(fp(rt.p),'p-valor')}</div>
+      <ul class="interp">
+        <li>Signo: <b>${r>=0?'positivo (crecen juntas)':'negativo (una crece y la otra decrece)'}</b>.</li>
+        <li>Magnitud: |r| = ${f(Math.abs(r),2)} ⇒ relación <b>${Math.abs(r)>.7?'fuerte':Math.abs(r)>.4?'moderada':'débil'}</b>.</li>
+        <li>La pendiente b₁ = ${f(0,0).replace('0','')}${''} explica en promedio cuánto cambia Y por +1 en X.</li>
+      </ul></div>`;
+  }
+  const rY=D.X[0].map((_,j)=>pearson(D.X.map(r=>r[j]),D.yraw.map(parseNum)));
+  const CM=corrMatrix(D.X,D.yraw.map(parseNum));
+  const names=[...D.names,'Y'];
+  const head=['',...names];
+  const rows=CM.map((r,i)=>tr([esc(names[i]),...r.map((v,j)=>i===j?{cls:'diag',v:'1.000'}:f(v,3))]));
+  const sdy=Math.sqrt(sum(D.yraw.map(v=>(v-mean(D.yraw.map(parseNum)))**2))/(D.X.length-1));
+  const beta=D.names.map((_,j)=>{
+    const sdx=Math.sqrt(sum(D.X.map(r=>(r[j]-mean(D.X.map(q=>q[j])))**2))/(D.X.length-1));
+    return NaN; // se calcula abajo con M.b, no aquí
+  });
+  return {rY,CM,names,head,rows};
+}
+function comparePredictorsCard(D,M){
+  const rY=D.X[0].map((_,j)=>pearson(D.X.map(r=>r[j]),D.yraw.map(parseNum)));
+  const sdy=Math.sqrt(sum(D.yraw.map(v=>(v-mean(D.yraw.map(parseNum)))**2))/(D.X.length-1));
+  const beta=D.names.map((_,j)=>{
+    const sdx=Math.sqrt(sum(D.X.map(r=>(r[j]-mean(D.X.map(q=>q[j])))**2))/(D.X.length-1));
+    return sdy>0?sdx*M.b[j+1]/sdy:NaN;
+  });
+  const ranking=[...D.names.map((t,j)=>({t,r:rY[j],b:beta[j],raw:M.b[j+1],p:M.pv[j+1]}))].sort((a,b)=>Math.abs(b.b)-Math.abs(a.b));
+  const best=ranking[0];
+  return `<div class="card"><h3>Comparación de predictores</h3>
+   ${tbl(['Predictor','r con Y','β estandarizado','b (crudo)','p-valor'],
+      ranking.map(o=>tr([esc(o.t),f(o.r,3),f(o.b,3),f(o.raw,3),sigp(o.p)])))}
+   <ul class="interp">
+     <li>El predictor <b>${esc(best.t)}</b> tiene el mayor efecto estandarizado (|β| = ${f(Math.abs(best.b),3)}): es el que <b>más se relaciona con ${esc(D.yname)}</b> cuando los demás se mantienen constantes.</li>
+     <li>Señal de multicolinealidad: si |r(Xⱼ, Xₖ)| > 0.8 entre predictores, sus coeficientes pueden volverse inestables (ver VIF abajo).</li>
+     <li>Compara β (no b) para saber qué variable “pesa” más, porque β está en desviaciones estándar.</li>
+   </ul></div>`;
+}
+function collinearityCard(D){
+  const vifs=D.X[0].map((_,j)=>vifFor(D.X,j));
+  const tol=vifs.map(v=>1/v);
+  let cond=NaN;
+  try{const XtX=mul(T(D.X),D.X);const M=XtX.map(r=>r.slice());
+    // solo si 2 predictores; con 1 no aplica
+    if(D.X[0].length>=2){const eig2=(a,b,c,d)=>{const tr=a+d,det=a*d-b*c;const D2=tr*tr-4*det;return[ (tr+Math.sqrt(Math.max(0,D2)))/2,(tr-Math.sqrt(Math.max(0,D2)))/2 ]};
+      // cálculo aproximado para 2×2; para >2 se usa la suma de |r| como proxy
+      if(D.X[0].length===2){const[a,b,c,d]=[XtX[0][0],XtX[0][1],XtX[1][0],XtX[1][1]];const[e1,e2]=eig2(a,b,c,d);cond=Math.sqrt(Math.max(e1,e2)/Math.max(1e-12,Math.min(e1,e2)))}
+    }}catch(_){}
+  return `<div class="card"><h3>Colinealidad</h3>
+   ${tbl(['Predictor','VIF','Tolerancia (1/VIF)','Lectura'],
+      D.names.map((t,j)=>tr([esc(t),f(vifs[j],2),f(tol[j],3),{cls:'l',v:vifs[j]>10?'Grave':vifs[j]>5?'Moderada':'Aceptable'}])))}
+   ${isFinite(cond)?`<p class="hint">Número de condición ≈ ${f(cond,1)}${cond>30?' — inestabilidad numérica':''}.</p>`:''}
+   <ul class="interp">
+     <li>VIF mide cuánto se infla la varianza de bⱼ por la correlación con los demás predictores. Regla práctica: VIF &lt; 5 aceptable; &gt; 10 problemático.</li>
+     <li>${vifs.every(v=>v<5)?'No hay colinealidad preocupante; los coeficientes son estables.':'Hay colinealidad: considera eliminar o combinar predictores, o centrar variables.'}</li>
+     <li>Tolerancia = 1/VIF; valores &lt; 0.2 indican colinealidad seria.</li>
+   </ul></div>`;
+}
+
+/* ---------- Comprobación de supuestos (línea) ---------- */
+function assumptionsOLS(D,M){
+  const e=M.e;
+  const dw=durbinWatson(e);
+  const bp=breuschPagan(D.X.map(r=>[1,...r]),e);
+  const jb=jarqueBera(e);
+  const n=M.n;
+  // Linealidad: correlación |e| y ŷ
+  const rResFit=pearson(e,M.yh);
+  const rResX=D.X[0].map((_,j)=>pearson(e,D.X.map(r=>r[j])));
+  let ch='';
+  // Q-Q
+  const m=mean(e),s=Math.sqrt(sum(e.map(v=>(v-m)**2))/(n-1));
+  const z=e.map(v=>(v-m)/s).sort((a,b)=>a-b);
+  const theo=z.map((_,i)=>invNorm((i+0.5)/n));
+  const dx=dom([...theo,...z],.1);
+  const Pq=Plot({xmin:dx[0],xmax:dx[1],ymin:dx[0],ymax:dx[1],xl:'Cuantil teórico normal',yl:'Residuo estandarizado',w:520,h:320});
+  Pq.seg(dx[0],dx[0],dx[1],dx[1],{stroke:'var(--muted)','stroke-dasharray':'4 3'});
+  theo.forEach((t,i)=>Pq.mark(t,z[i],'circle',4.2,{fill:'var(--acc)',stroke:'var(--surface)'}));
+  ch+=fig(Pq.svg(),'Q–Q normal de los residuos. Si los puntos siguen la diagonal, la normalidad es razonable.');
+  // Residuos vs ajustados con banda ±2s
+  const dx2=dom(M.yh,.08),dy2=dom(e,.15);
+  const Pr=Plot({xmin:dx2[0],xmax:dx2[1],ymin:Math.min(dy2[0],-2*M.s*1.1),ymax:Math.max(dy2[1],2*M.s*1.1),xl:'ŷ',yl:'Residuo e',w:520,h:320});
+  Pr.seg(dx2[0],0,dx2[1],0,{stroke:'var(--muted)','stroke-dasharray':'4 3'});
+  Pr.seg(dx2[0],2*M.s,dx2[1],2*M.s,{stroke:'var(--muted)','stroke-dasharray':'2 3',opacity:.6});
+  Pr.seg(dx2[0],-2*M.s,dx2[1],-2*M.s,{stroke:'var(--muted)','stroke-dasharray':'2 3',opacity:.6});
+  M.yh.forEach((v,i)=>Pr.mark(v,e[i],'circle',4.4,{fill:Math.abs(e[i])>2*M.s?'var(--bad)':'var(--acc)',stroke:'var(--surface)'}));
+  ch+=fig(Pr.svg(),'Residuos vs. ajustados: debe verse una nube sin patrón y con dispersión homogénea (±2s marcado).');
+  const okL=Math.abs(rResFit)<0.3&&rResX.every(r=>Math.abs(r)<0.3);
+  const okN=jb.p>0.05;
+  const okH=bp?bp.p>0.05:true;
+  const okI=dw>1.5&&dw<2.5;
+  return `<div class="card"><h3>Comprobación de supuestos</h3>
+   ${tbl(['Supuesto','Estadístico','p-valor / lectura','Diagnóstico'],[
+     tr(['Linealidad','r(e, ŷ) = '+f(rResFit,3),'|r| < 0.3 ideal',{cls:'l',v:okL?'Aceptable':'Revisar: posible no linealidad'}]),
+     tr(['Independencia','Durbin–Watson = '+f(dw,3),'≈ 2 ideal',{cls:'l',v:okI?'Aceptable':'Posible autocorrelación'}]),
+     tr(['Homocedasticidad',bp?'Breusch–Pagan LM = '+f(bp.LM,3):'—',bp?'p = '+fp(bp.p):'—',{cls:'l',v:okH?'Aceptable':'Heterocedasticidad'}]),
+     tr(['Normalidad','Jarque–Bera = '+f(jb.stat,3),'p = '+fp(jb.p),{cls:'l',v:okN?'Aceptable':'Residuos no normales'}]),
+   ])}
+   <ul class="interp">
+     <li><b>Linealidad:</b> ${okL?'los residuos no se correlacionan con ŷ ni con las X; la forma lineal es adecuada.':'aparece correlación entre residuos y ajuste/predictores ⇒ considera transformaciones o términos cuadráticos.'}</li>
+     <li><b>Independencia:</b> Durbin–Watson ≈ 2 no indica autocorrelación${okI?'':' (valor fuera del rango 1.5–2.5)'}.</li>
+     <li><b>Homocedasticidad:</b> ${okH?'la varianza de los residuos se mantiene estable a lo largo de ŷ.':'el test sugiere varianza no constante; prueba transformar Y o usar errores robustos.'}</li>
+     <li><b>Normalidad:</b> ${okN?'los residuos no se apartan significativamente de la normal (los IC y pruebas t son fiables).':'los residuos no son normales; con n grande los IC son aproximados.'}</li>
+   </ul>
+   <div class="charts">${ch}</div>
+  </div>`;
+}
+
+/* ---------- Regresión lineal ---------- */
+function rOLS(D){
+  const s=S[cur],yv=D.yraw.map(v=>parseNum(v));
+  if(yv.some(isNaN))throw new Error('La variable respuesta Y debe ser numérica.');
+  const k=D.names.length,X=D.X.map(r=>[1,...r]),M=ols(X,yv);
+  if(cur===1&&k!==1)throw new Error('La regresión simple usa un solo predictor.');
+  const conf=s.conf,tc=tCrit(conf,M.dfe),Fc=fCrit(1-conf,Math.max(1,k),M.dfe),n=M.n,nm=['Intercepto',...D.names];
+  const x0=nuevoX(D.names),have=x0.every(v=>!isNaN(v)),xv=[1,...x0];
+  const eq=eqSimple(D.names,M.b,D.yname);
+  let h=warnDrop(D);
+
+  // ---- Resumen ----
+  const rval=k===1?pearson(D.X.map(r=>r[0]),yv):Math.sqrt(Math.max(0,M.R2));
+  const tilesExtra=k===1?tile(f(rval,3),'Coeficiente de correlación r'):tile(f(rval,3),'R múltiple = √R²');
+  h+=`<div class="card"><h3>Resumen del modelo</h3>
+    <div class="tiles">
+      ${tilesExtra}
+      ${tile(f(M.R2,4),'R² (variación de Y explicada)')}
+      ${tile(f(M.R2a,4),'R² ajustado')}
+      ${tile(f(M.s,3),'Error estándar s<sub>e</sub>')}
+      ${tile(f(M.F,2),'Estadístico F')}
+      ${tile(f(Fc,2),'F crítico ('+(1-conf).toFixed(2)+')')}
+      ${tile(fp(M.pF),'p-valor de F')}
+      ${tile(n,'Observaciones n')}
+    </div>
+    <p class="formula">Forma normal del modelo</p>
+    <div class="eq">${eq.norm}</div>
+    <p class="formula">Modelo ajustado con las variables del contexto</p>
+    <div class="eq">${eq.fit}</div>
+  </div>`;
+
+  // ---- Hipótesis ----
+  h+=`<div class="card"><h3>Hipótesis y prueba F</h3>${hypBoxOLS(D,M,conf,Fc)}
+     <div class="charts">${fig(fTestPlot(M,conf),'Distribución F('+(M.p-1)+', '+M.dfe+'). Región roja = rechazo de H₀ al '+((1-conf)*100).toFixed(0)+' %; la línea negra marca la F observada.',legend([['var(--acc)','Densidad F'],['var(--bad)','Región crítica','band']]))}</div></div>`;
+
+  // ---- Coeficientes ----
+  const rows=nm.map((t,j)=>tr([esc(t),f(M.b[j],4),f(M.se[j],4),f(M.t[j],3),sigp(M.pv[j]),f(M.b[j]-tc*M.se[j],4),f(M.b[j]+tc*M.se[j],4)]));
+  // t crítica
+  const tcv=tCrit(conf,M.dfe);
+  h+=`<div class="card"><h3>Coeficientes y pruebas t</h3>
+    <div class="tiles">${tile(f(tcv,3),`t crítica (gl = ${M.dfe}, ${conf*100}%)`)}${tile(f(M.s,3),'s<sub>e</sub> residual')}</div>
+    ${tbl(['Término','b','Error est.','t','p-valor',`IC ${conf*100}% inf.`,`IC ${conf*100}% sup.`],rows)}
+    ${dl([['b','Cambio esperado de Y por +1 en ese predictor, con los demás fijos.'],['Error est.','Incertidumbre de b.'],['t = b / error est.','Distancia a 0 en errores estándar.'],['p-valor','Significancia individual.'],['IC','Rango plausible al '+conf*100+' %.']])}
+    <ul class="interp">${nm.slice(1).map((t,j)=>`<li><b>${esc(t)}:</b> +1 ⇒ ${esc(D.yname)} cambia en promedio <b>${f(M.b[j+1],3)}</b> (IC ${conf*100}%: ${f(M.b[j+1]-tc*M.se[j+1],3)} a ${f(M.b[j+1]+tc*M.se[j+1],3)}). ${M.pv[j+1]<0.05?'<b>Significativo.</b>':'No significativo.'}</li>`).join('')}
+    <li>El modelo explica el <b>${f(M.R2*100,1)} %</b> de la variación de ${esc(D.yname)}.</li></ul></div>`;
+
+  // ---- ANOVA con F crítica ----
+  h+=`<div class="card"><h3>Tabla ANOVA</h3>${tbl(['Fuente','Suma de cuadrados','gl','Cuadrado medio','F','p-valor','F crítica'],[
+    tr(['Regresión (SSR)',f(M.SSR,3),k,f(M.SSR/k,3),f(M.F,3),sigp(M.pF),f(Fc,3)]),
+    tr(['Residual (SSE)',f(M.SSE,3),M.dfe,f(M.MSE,3),'','','']),
+    tr(['Total (SST)',f(M.SST,3),n-1,'','','',''],'tot')])}
+    <p class="hint">F = ${f(M.F,3)} ${M.F>Fc?'>':'≤'} Fc = ${f(Fc,3)} ⇒ ${M.F>Fc?'rechazar H₀':'no rechazar H₀'} (α = ${((1-conf)).toFixed(2)}).</p></div>`;
+
+  // ---- Colinealidad y comparación de predictores (múltiple) ----
+  if(k>=2){
+    h+=collinearityCard(D);
+    h+=comparePredictorsCard(D,M);
+    // matriz de correlaciones
+    const CM=corrMatrix(D.X,D.yraw.map(parseNum));
+    const names=[...D.names,'Y'];
+    const head=['',...names];
+    const rrows=CM.map((r,i)=>tr([esc(names[i]),...r.map((v,j)=>i===j?{cls:'diag',v:'1.000'}:f(v,3))]));
+    h+=`<div class="card"><h3>Matriz de correlaciones</h3>${tbl(head,rrows)}
+      <ul class="interp">
+        <li>La diagonal siempre es 1. Los valores fuera de la diagonal indican asociación lineal.</li>
+        <li>La columna/última fila "Y" muestra la correlación simple de cada predictor con la respuesta.</li>
+        <li>Correlaciones altas entre predictores (&gt; |0.8|) anticipan problemas de colinealidad.</li>
+      </ul></div>`;
+  }
+
+  // ---- Predicción ----
+  let pred=null;
+  if(have){
+    const yh0=dot(xv,M.b),q=dot(xv,mulv(M.A,xv)),sem=M.s*Math.sqrt(q),sepI=M.s*Math.sqrt(1+q);
+    pred={x0,yh:yh0,lo:yh0-tc*sem,hi:yh0+tc*sem,plo:yh0-tc*sepI,phi:yh0+tc*sepI,obj:null,xo:null,extrap:false};
+    let pr=`<p>Con ${D.names.map((t,j)=>`${esc(t)} = ${f(x0[j],3)}`).join(', ')}: <b class="mono">ŷ = ${f(yh0,3)}</b></p>
+     ${tbl(['Intervalo','Inferior','Superior','Qué estima'],[
+       tr([`IC ${conf*100}% de la media`,f(yh0-tc*sem,3),f(yh0+tc*sem,3),{cls:'l',v:'Promedio de Y con esos valores'}]),
+       tr([`Predicción ${conf*100}% (un caso)`,f(yh0-tc*sepI,3),f(yh0+tc*sepI,3),{cls:'l',v:'Un caso nuevo individual'}])])}`;
+    if(cur===1&&s.objetivo!==''){
+      const yo=parseNum(s.objetivo);
+      if(!isNaN(yo)){
+        const xo=(yo-M.b[0])/M.b[1];
+        const ext=xo<Math.min(...D.X.map(r=>r[0]))||xo>Math.max(...D.X.map(r=>r[0]));
+        pred.obj=yo;pred.xo=xo;pred.extrap=ext;
+        pr+=`<p>Para Y = ${f(yo,3)}: x = <b>${f(xo,3)}</b>${ext?' <span class="pill no">extrapolación</span>':''}.</p>`;
+      }
+    }
+    h+=`<div class="card"><h3>Predicción para el caso nuevo</h3>${pr}</div>`;
+  }
+
+  // ---- Gráficas ----
+  let ch='';
+  const resid=(xs,xl)=>{const dx=dom(xs),dy=dom(M.e,.15),P=Plot({xmin:dx[0],xmax:dx[1],ymin:Math.min(dy[0],-1e-9),ymax:Math.max(dy[1],1e-9),xl,yl:'Residuo e = y − ŷ'});
+    P.seg(dx[0],0,dx[1],0,{stroke:'var(--muted)','stroke-dasharray':'4 3'});
+    xs.forEach((v,i)=>P.mark(v,M.e[i],'circle',4.5,{fill:Math.abs(M.e[i])>2*M.s?'var(--bad)':'var(--acc)',stroke:'var(--surface)'}));return P.svg()};
+  if(k===1){
+    const x=D.X.map(r=>r[0]),dx=dom(x,.08),N=60,xs=Array.from({length:N+1},(_,i)=>dx[0]+(dx[1]-dx[0])*i/N);
+    const band=m=>{const lo=[],up=[];xs.forEach(v=>{const q=1/n+(v-mean(x))**2/sum(x.map(a=>(a-mean(x))**2)),w=tc*M.s*Math.sqrt(m+q),yy=M.b[0]+M.b[1]*v;lo.push([v,yy-w]);up.push([v,yy+w])});return[up,lo]};
+    const[ui,li]=band(0),[up,lp]=band(1);const yr=dom([...yv,...up.map(a=>a[1]),...lp.map(a=>a[1])],.05);
+    const P=Plot({xmin:dx[0],xmax:dx[1],ymin:yr[0],ymax:yr[1],xl:D.names[0],yl:D.yname});
+    P.area(up,lp,{fill:'var(--acc)',opacity:.1}).area(ui,li,{fill:'var(--acc)',opacity:.22}).line(xs.map(v=>[v,M.b[0]+M.b[1]*v]),{stroke:'var(--acc)','stroke-width':2.4});
+    x.forEach((v,i)=>{P.seg(v,yv[i],v,M.yh[i],{stroke:'var(--bad)','stroke-width':1.2,opacity:.7});P.mark(v,yv[i],'circle',4.6,{fill:'var(--ink)',stroke:'var(--surface)'})});
+    if(have)P.mark(x0[0],M.b[0]+M.b[1]*x0[0],'star',7,{fill:'var(--k2)',stroke:'var(--ink)'});
+    ch+=fig(P.svg(),'Recta ajustada con bandas de confianza.',legend([['var(--ink)','Datos'],['var(--acc)','Recta','line'],['var(--bad)','Residuos','line'],['var(--acc)','IC media','band'],['var(--k2)','Caso nuevo']]));
+    ch+=fig(resid(x,D.names[0]),'Residuos contra x.');
+  }else{
+    const dxy=dom([...yv,...M.yh],.08),P=Plot({xmin:dxy[0],xmax:dxy[1],ymin:dxy[0],ymax:dxy[1],xl:'ŷ',yl:`${D.yname} (observado)`});
+    P.seg(dxy[0],dxy[0],dxy[1],dxy[1],{stroke:'var(--muted)','stroke-dasharray':'4 3'});
+    yv.forEach((v,i)=>P.mark(M.yh[i],v,'circle',4.8,{fill:'var(--acc)',stroke:'var(--surface)'}));
+    if(k===2)ch+=`<figure><div id="p3d"></div><div class="legend"><span><i style="background:var(--k2)"></i>Sobre el plano</span><span><i style="background:var(--k1)"></i>Bajo el plano</span><span><i style="background:var(--acc);opacity:.5;border-radius:2px"></i>Plano ajustado</span></div><figcaption>Arrastra para girar. El plano es la regresión; los segmentos unen cada dato con su valor ajustado.</figcaption></figure>`;
+    ch+=fig(P.svg(),'Observado vs. predicho. R² = '+f(M.R2,3)+'.');
+    ch+=fig(resid(M.yh,'ŷ'),'Residuos vs. valores ajustados.');
+    if(k===2)after=()=>mount3d($('#p3d'),D,M,yv);
+  }
+  h+=`<div class="card"><h3>Gráficas</h3><div class="charts">${ch}</div></div>`;
+
+  // ---- Supuestos ----
+  h+=assumptionsOLS(D,M);
+
+  // ---- Tabla de valores ajustados ----
+  const rr=yv.map((v,i)=>{const r=M.e[i]/(M.s*Math.sqrt(1-M.h[i]));return tr([i+1,...D.X[i].map(a=>f(a,3)),f(v,3),f(M.yh[i],3),f(M.e[i],3),f(M.h[i],3),f(r,2)],Math.abs(r)>2?'hl':'')});
+  h+=`<div class="card"><h3>Valores ajustados y residuos</h3><div style="max-height:280px;overflow:auto">${tbl(['i',...D.names,'y','ŷ','e','Palanca h','Residuo estudentizado'],rr)}</div></div>`;
+
+  h+=conclOLS(D,M,conf,tc,Fc,pred);
+  if(k===1)after=()=>{};
+  return h;
+}
+
+/* ---------- visor 3D ---------- */
+function mount3d(el,D,M,yv){
+  if(!el)return;
+  const x1=D.X.map(r=>r[0]),x2=D.X.map(r=>r[1]);
+  const a1=dom(x1,.05),a2=dom(x2,.05),ay=dom(yv,.08);
+  const nz=(v,r)=>2*(v-r[0])/(r[1]-r[0])-1;
+  const DEF={az:35,elv:22};
+  let az=DEF.az,elv=DEF.elv,spin=false,raf=null,drag=null;
+  el.innerHTML=`<div class="tools"><button class="btn" id="spin3d" type="button" aria-pressed="false">⟳ Giro automático</button><button class="btn" id="reset3d" type="button">Reiniciar vista</button><span class="hint">Arrastra para girar el plano</span></div>
+    <svg class="plot" viewBox="0 0 560 430" role="img" aria-label="Plano de regresión múltiple en 3D" style="touch-action:none;cursor:grab"><g class="scene"></g></svg>`;
+  const sv=el.querySelector('svg'),g=el.querySelector('.scene');
+  function scene(){
+    const ca=Math.cos(az*Math.PI/180),sa=Math.sin(az*Math.PI/180);
+    const ce=Math.cos(elv*Math.PI/180),se=Math.sin(elv*Math.PI/180);
+    const W=560,H=430,sc=128,cx=W/2,cy=H/2+10;
+    const pj=(X,Y,Z)=>{const xr=X*ca-Y*sa,yr=X*sa+Y*ca;return{x:cx+sc*xr,y:cy-sc*(Z*ce+yr*se),d:yr*ce-Z*se}};
+    let s='';
+    const C=[[-1,-1,-1],[1,-1,-1],[1,1,-1],[-1,1,-1],[-1,-1,1],[1,-1,1],[1,1,1],[-1,1,1]];
+    [[0,1],[1,2],[2,3],[3,0],[4,5],[5,6],[6,7],[7,4],[0,4],[1,5],[2,6],[3,7]].forEach(([i,j])=>{const p=pj(...C[i]),q=pj(...C[j]);s+=`<line x1="${p.x.toFixed(1)}" y1="${p.y.toFixed(1)}" x2="${q.x.toFixed(1)}" y2="${q.y.toFixed(1)}" style="stroke:var(--line);stroke-width:1"/>`});
+    const lab=(X,Y,Z,t)=>{const p=pj(X,Y,Z),x=Math.max(84,Math.min(W-84,p.x)),y=Math.max(14,Math.min(H-10,p.y));return `<text x="${x.toFixed(0)}" y="${y.toFixed(0)}" text-anchor="middle" class="t">${esc(t)}</text>`};
+    s+=lab(0,-1.32,-1,`${D.names[0]} (${tk(+a1[0].toFixed(2))} a ${tk(+a1[1].toFixed(2))})`);
+    s+=lab(1.42,0,-1,`${D.names[1]} (${tk(+a2[0].toFixed(2))} a ${tk(+a2[1].toFixed(2))})`);
+    s+=lab(-1.15,-1.15,1.2,`${D.yname} (${tk(+ay[0].toFixed(1))} a ${tk(+ay[1].toFixed(1))})`);
+    const N=8,pol=[];
+    for(let i=0;i<N;i++)for(let j=0;j<N;j++){
+      const u0=a1[0]+(a1[1]-a1[0])*i/N,u1=a1[0]+(a1[1]-a1[0])*(i+1)/N;
+      const v0=a2[0]+(a2[1]-a2[0])*j/N,v1=a2[0]+(a2[1]-a2[0])*(j+1)/N;
+      const q=[[u0,v0],[u1,v0],[u1,v1],[u0,v1]].map(([u,v])=>{const z=Math.max(-1.15,Math.min(1.15,nz(M.b[0]+M.b[1]*u+M.b[2]*v,ay)));return pj(nz(u,a1),nz(v,a2),z)});
+      pol.push({d:sum(q.map(a=>a.d))/4,s:`<polygon points="${q.map(a=>a.x.toFixed(1)+','+a.y.toFixed(1)).join(' ')}" style="fill:var(--acc);fill-opacity:.17;stroke:var(--acc);stroke-opacity:.5;stroke-width:.7"/>`});
+    }
+    const pts=yv.map((v,i)=>{
+      const X=nz(x1[i],a1),Y=nz(x2[i],a2),Z=nz(v,ay),Zf=nz(M.yh[i],ay);
+      const p=pj(X,Y,Z),q=pj(X,Y,Zf);
+      return{d:p.d,s:`<line x1="${p.x.toFixed(1)}" y1="${p.y.toFixed(1)}" x2="${q.x.toFixed(1)}" y2="${q.y.toFixed(1)}" style="stroke:var(--bad);stroke-width:1.1;opacity:.7"/><circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="5" style="fill:${M.e[i]>=0?'var(--k2)':'var(--k1)'};stroke:var(--ink);stroke-width:.8"/>`};
+    });
+    s+=[...pol,...pts].sort((a,b)=>b.d-a.d).map(a=>a.s).join('');
+    return s;
+  }
+  function draw(){g.innerHTML=scene()}
+  function setSpin(on){spin=on;const b=el.querySelector('#spin3d');if(b){b.setAttribute('aria-pressed',String(on));b.textContent=on?'❚❚ Detener giro':'⟳ Giro automático'}if(raf){cancelAnimationFrame(raf);raf=null}if(on)raf=requestAnimationFrame(loop)}
+  function loop(){if(!spin)return;if(!document.body.contains(sv)){spin=false;return}az=(az+0.6)%360;draw();raf=requestAnimationFrame(loop)}
+  sv.addEventListener('pointerdown',e=>{if(spin)setSpin(false);drag={x:e.clientX,y:e.clientY,az,elv};try{sv.setPointerCapture(e.pointerId)}catch(_){}sv.style.cursor='grabbing'});
+  sv.addEventListener('pointermove',e=>{if(!drag)return;az=drag.az+(e.clientX-drag.x)*.6;elv=Math.max(-15,Math.min(85,drag.elv+(e.clientY-drag.y)*.45));draw()});
+  const endDrag=()=>{drag=null;sv.style.cursor='grab'};
+  sv.addEventListener('pointerup',endDrag);sv.addEventListener('pointercancel',endDrag);sv.addEventListener('lostpointercapture',endDrag);
+  const bs=el.querySelector('#spin3d'),br=el.querySelector('#reset3d');
+  if(bs)bs.onclick=()=>setSpin(!spin);
+  if(br)br.onclick=()=>{az=DEF.az;elv=DEF.elv;draw()};
+  draw();
+}
+
+/* ---------- Logística binaria ---------- */
+function rBin(D){
+  const s=S[cur],cls=classList();
+  if(cls.length!==2)throw new Error(`La respuesta debe tener exactamente 2 categorías y tiene ${cls.length}. Para 3 o más usa el tema 5.`);
+  if(cur===3&&D.names.length!==1)throw new Error('El tema 3 usa un solo predictor.');
+  const pos=posClass(),y=D.yraw.map(v=>v===pos?1:0),k=D.names.length,X=D.X.map(r=>[1,...r]),thr=s.thr,nm=['Intercepto',...D.names];
+  if(X.length<k+2)throw new Error('Hay muy pocas observaciones para este número de predictores.');
+  const M=fitLogit(X,y);
+  if(M.n1===0||M.n0===0)throw new Error('Todas las filas pertenecen a la misma clase.');
+  const zc=Z95[.95],C=confusion(y,M.ph,thr),R=roc(y,M.ph),neg=cls.find(c=>c!==pos);
+  const x0=nuevoX(D.names),have=x0.every(v=>!isNaN(v)),z0=have?M.b[0]+dot(M.b.slice(1),x0):NaN,p0=sigm(z0);
+  const eq=eqLogit(D.names,M.b);
+  let h=warnDrop(D);
+  if(M.sep)h+=`<div class="warn"><b>Posible separación perfecta.</b> Los coeficientes no son confiables.</div>`;
+  else if(!M.conv)h+=`<div class="warn">El algoritmo no convergió en ${M.hist.length-1} iteraciones.</div>`;
+
+  // ---- Resumen ----
+  h+=`<div class="card"><h3>Resumen del modelo</h3>
+    <div class="tiles">
+      ${tile(f(M.G,2),'G = 2(ℓ − ℓ₀)')}
+      ${tile(fp(M.pG),`p-valor (χ², ${M.df} gl)`)}
+      ${tile(f(M.mcf,3),'R² de McFadden')}
+      ${tile(f(M.AIC,2),'AIC')}
+      ${cur===4?tile(f(R.auc,3),'AUC')+tile(f(C.acc,3),`Exactitud (u = ${thr.toFixed(2)})`):''}
+      ${tile(`${M.n1} / ${M.n0}`,`n de ${esc(pos)} / ${esc(neg)}`)}
+    </div>
+    <p class="formula">Forma normal del modelo</p>
+    <div class="eq">${eq.norm}</div>
+    <p class="formula">Modelo ajustado con las variables del contexto</p>
+    <div class="eq">${eq.fit}</div>
+  </div>`;
+
+  // ---- Hipótesis ----
+  const hyp=`<div class="hypbox">
+    <p><b>H₀:</b> ${k>1?'β₁ = β₂ = … = β'+k+' = 0':'β₁ = 0'} — ninguno de los predictores se asocia con la probabilidad de ${esc(pos)}.</p>
+    <p><b>H₁:</b> ${k>1?'al menos un βⱼ ≠ 0':'β₁ ≠ 0'} — al menos uno sí se asocia.</p>
+    <p><b>Estadístico:</b> G = ${f(M.G,3)} ~ χ²(${M.df}); p = ${fp(M.pG)}. <b>Decisión:</b> ${M.pG<0.05?'se rechaza H₀':'no se rechaza H₀'}. ${M.pG<0.05?'En el contexto: el modelo aporta información sobre '+esc(pos)+'.':'En el contexto: el modelo no aporta información.'}</p>
+  </div>`;
+  h+=`<div class="card"><h3>Hipótesis global</h3>${hyp}</div>`;
+
+  // ---- Coeficientes ----
+  const rows=nm.map((t,j)=>tr([esc(t),f(M.b[j],4),f(M.se[j],4),f(M.z[j],3),sigp(M.pz[j]),j?f(Math.exp(M.b[j]),3):'—',j?`${f(Math.exp(M.b[j]-zc*M.se[j]),3)} ; ${f(Math.exp(M.b[j]+zc*M.se[j]),3)}`:'—']));
+  h+=`<div class="card"><h3>Coeficientes y razones de momios</h3>${tbl(['Término','b','Error est.','z','p-valor','OR = eᵇ','IC 95 % del OR'],rows)}
+    <ul class="interp">${D.names.map((t,j)=>`<li><b>${esc(t)}:</b> OR = <b>${f(Math.exp(M.b[j+1]),3)}</b> (${Math.exp(M.b[j+1])>=1?'+':''}${f((Math.exp(M.b[j+1])-1)*100,1)} %). ${M.pz[j+1]<0.05?'Significativo.':'No significativo.'}</li>`).join('')}
+    <li>Modelo global: G = ${f(M.G,2)}, p ${M.pG<0.001?'< 0.001':'= '+f(M.pG,3)}.</li></ul></div>`;
+
+  // ---- Iteraciones ----
+  const it=M.hist.map(q=>tr([q.it,...q.b.map(v=>f(v,4)),f(q.ll,3)]));
+  h+=`<div class="card"><h3>Iteraciones (Newton–Raphson)</h3>${tbl(['Iteración',...nm.map(t=>'b: '+esc(t)),'ℓ'],it)}</div>`;
+
+  if(have){
+    h+=`<div class="card"><h3>Predicción para el caso nuevo</h3>
+      <p>${D.names.map((t,j)=>`${esc(t)} = ${f(x0[j],3)}`).join(', ')}<br>
+      z = ${f(z0,3)}, p = <b class="mono">${f(p0,4)}</b>.
+      Con u = ${thr.toFixed(2)}: <span class="pill ${p0>=thr?'no':'ok'}">${esc(p0>=thr?pos:neg)}</span></p></div>`;
+  }
+
+  // ---- Gráficas ----
+  let ch='';
+  if(k===1){
+    const x=D.X.map(r=>r[0]),d=dom(x,.12),xs=Array.from({length:120},(_,i)=>d[0]+(d[1]-d[0])*i/119);
+    const P=Plot({xmin:d[0],xmax:d[1],ymin:-.04,ymax:1.04,xl:D.names[0],yl:`p = P(${pos})`,yticks:[0,.25,.5,.75,1]});
+    P.seg(d[0],thr,d[1],thr,{stroke:'var(--muted)','stroke-dasharray':'4 3'}).line(xs.map(v=>[v,sigm(M.b[0]+M.b[1]*v)]),{stroke:'var(--acc)','stroke-width':2.6});
+    x.forEach((v,i)=>P.mark(v,y[i],'circle',4.8,{fill:y[i]?'var(--k2)':'var(--k1)',stroke:'var(--ink)','stroke-width':.8,opacity:.9}));
+    if(have)P.mark(x0[0],p0,'star',7,{fill:'var(--surface)',stroke:'var(--ink)','stroke-width':1.4});
+    ch+=fig(P.svg(),'Curva sigmoide ajustada.');
+  }
+  if(k===2){
+    const xa=D.X.map(r=>r[0]),xb=D.X.map(r=>r[1]),d1=dom(xa,.1),d2=dom(xb,.1),G=44;
+    const P=Plot({xmin:d1[0],xmax:d1[1],ymin:d2[0],ymax:d2[1],xl:D.names[0],yl:D.names[1]});
+    for(let i=0;i<G;i++)for(let j=0;j<G;j++){
+      const u=d1[0]+(d1[1]-d1[0])*(i+.5)/G,v=d2[0]+(d2[1]-d2[0])*(j+.5)/G;
+      const p=sigm(M.b[0]+M.b[1]*u+M.b[2]*v);
+      P.rect(d1[0]+(d1[1]-d1[0])*i/G,d2[0]+(d2[1]-d2[0])*j/G,d1[0]+(d1[1]-d1[0])*(i+1)/G+.001,d2[0]+(d2[1]-d2[0])*(j+1)/G+.001,{fill:p>=thr?'var(--k2)':'var(--k1)',opacity:(.1+.38*Math.abs(p-.5)*2).toFixed(2)});
+    }
+    if(M.b[2]!==0){const lt=Math.log(thr/(1-thr));P.line([d1[0],d1[1]].map(u=>[u,(lt-M.b[0]-M.b[1]*u)/M.b[2]]),{stroke:'var(--ink)','stroke-width':2.4})}
+    xa.forEach((u,i)=>P.mark(u,xb[i],y[i]?'tri':'circle',5,{fill:y[i]?'var(--k2)':'var(--k1)',stroke:'var(--ink)','stroke-width':(M.ph[i]>=thr)!==!!y[i]?2.2:.8}));
+    if(have)P.mark(x0[0],x0[1],'star',8,{fill:'var(--surface)',stroke:'var(--ink)','stroke-width':1.5});
+    ch+=fig(P.svg(),'Frontera de decisión.');
+  }
+  if(cur===4){
+    const P=Plot({xmin:-.02,xmax:1.02,ymin:-.02,ymax:1.02,xl:'Tasa de falsos positivos',yl:'Sensibilidad',xticks:[0,.2,.4,.6,.8,1],yticks:[0,.2,.4,.6,.8,1]});
+    P.seg(0,0,1,1,{stroke:'var(--muted)','stroke-dasharray':'4 3'}).area(R.pts.map(p=>[p[0],0]).concat([[1,0]]),R.pts,{fill:'var(--acc)',opacity:.12}).line(R.pts,{stroke:'var(--acc)','stroke-width':2.6});
+    P.mark(C.fpr,C.rec,'circle',6,{fill:'var(--k2)',stroke:'var(--ink)'});
+    ch+=fig(P.svg(),`Curva ROC. AUC = ${f(R.auc,3)}.`);
+    const P2=Plot({xmin:-.02,xmax:1.02,ymin:-.4,ymax:1.4,xl:'Probabilidad estimada p',yl:'Clase real',yticks:[0,1],m:{l:64}});
+    P2.seg(thr,-.4,thr,1.4,{stroke:'var(--ink)','stroke-width':1.6});
+    M.ph.forEach((p,i)=>{const j=((i*37)%17)/17-.5;P2.mark(p,y[i]+j*.5,y[i]?'tri':'circle',4.6,{fill:y[i]?'var(--k2)':'var(--k1)',stroke:(p>=thr)!==!!y[i]?'var(--bad)':'var(--ink)','stroke-width':(p>=thr)!==!!y[i]?2.2:.7,opacity:.9})});
+    ch+=fig(P2.svg(),'Probabilidad estimada por caso. Bordes rojos = errores.');
+  }
+  h+=`<div class="card"><h3>Gráficas</h3><div class="charts">${ch}</div></div>`;
+
+  // ---- Matriz de confusión + métricas ----
+  if(cur===4){
+    h+=`<div class="card"><h3>Matriz de confusión (u = ${thr.toFixed(2)})</h3><div class="charts">
+      <div>${tbl(['',`Pred. ${esc(pos)}`,`Pred. ${esc(neg)}`,'Total'],[
+        tr([`Real ${esc(pos)}`,{cls:'diag',v:'VP = '+C.TP},'FN = '+C.FN,C.TP+C.FN]),
+        tr([`Real ${esc(neg)}`,'FP = '+C.FP,{cls:'diag',v:'VN = '+C.TN},C.FP+C.TN]),
+        tr(['Total',C.TP+C.FP,C.FN+C.TN,M.n],'tot')])}</div>
+      <div>${tbl(['Métrica','Valor'],[
+        tr(['Exactitud',f(C.acc,3)]),tr(['Precisión',f(C.prec,3)]),tr(['Sensibilidad',f(C.rec,3)]),
+        tr(['Especificidad',f(C.spec,3)]),tr(['F1',f(C.f1,3)]),tr(['AUC',f(R.auc,3)])])}</div></div>
+      <p class="formula" style="margin-top:10px">Efecto del umbral</p>
+      ${tbl(['u','VP','FP','FN','VN','Precisión','Sensibilidad','Exactitud'],[.1,.2,.3,.4,.5,.6,.7,.8,.9].map(u=>{const c=confusion(y,M.ph,u);return tr([u,c.TP,c.FP,c.FN,c.TN,f(c.prec,2),f(c.rec,2),f(c.acc,2)],Math.abs(u-thr)<.05?'hl':'')}))}</div>`;
+  }
+
+  // ---- Supuestos (logística) ----
+  const vifs=k>=2?D.X[0].map((_,j)=>vifFor(D.X,j)):null;
+  const events=Math.min(M.n1,M.n0),epv=events/Math.max(1,k);
+  h+=`<div class="card"><h3>Comprobación de supuestos (logística)</h3>
+    ${tbl(['Aspecto','Estadístico','Lectura','Diagnóstico'],[
+      tr(['Muestra',`EPV = ${f(epv,1)}`,'≥ 10 ideal',{cls:'l',v:epv>=10?'Adecuado':'Ampliar muestra'}]),
+      tr(['Colinealidad',vifs?`VIF máx = ${f(Math.max(...vifs),2)}`:'—','< 5 ideal',{cls:'l',v:!vifs||Math.max(...vifs)<5?'Aceptable':'Revisar VIF'}]),
+      tr(['Eventos por clase',`${M.n1} / ${M.n0}`,'> 0 cada uno',{cls:'l',v:M.n1>0&&M.n0>0?'OK':'Falta una clase'}]),
+      tr(['Convergencia',M.conv?'Sí':'No','Newton-Raphson',{cls:'l',v:M.conv?'OK':'Revisar'}])
+    ])}
+    <ul class="interp">
+      <li><b>Linealidad del logit:</b> se asume que cada predictor entra de forma lineal; si alguna curva es evidente en p vs x, prueba transformaciones o términos cuadráticos.</li>
+      <li><b>Independencia:</b> las observaciones deben ser independientes (no medidas repetidas ni series temporales sin modelar).</li>
+      <li><b>Colinealidad:</b> ${!vifs?'solo hay un predictor, no aplica.':(Math.max(...vifs)<5?'VIF aceptable.':'VIF alto: revisa la sección de colinealidad en múltiple.')}</li>
+    </ul></div>`;
+
+  h+=conclBin(D,M,pos,neg,thr,C,cur===4?R:null,have?{x0,p0}:null);
+  after=()=>{};
+  return h;
+}
+
+function conclBin(D,M,pos,neg,thr,C,R,pred){
+  const items=[];
+  items.push(`Se modeló P(<b>${esc(D.yname)} = ${esc(pos)}</b>) frente a ${esc(neg)} con n = ${M.n} (${M.n1} de ${esc(pos)}, ${M.n0} de ${esc(neg)}).`);
+  items.push(M.pG<0.05?`Modelo <b>globalmente significativo</b> (G = ${f(M.G,2)}, ${M.df} gl, p ${M.pG<0.001?'< 0.001':'= '+f(M.pG,3)}).`:`Modelo <b>no</b> significativo (G = ${f(M.G,2)}, p = ${f(M.pG,3)}).`);
+  if(M.sep)items.push(`<b>Separación perfecta</b>: coeficientes y errores no confiables.`);
+  D.names.forEach((t,j)=>{const b=M.b[j+1],or=Math.exp(b),pv=M.pz[j+1];items.push(`<b>${esc(t)}</b>: b = ${f(b,3)}, OR = ${f(or,3)} (${or>=1?'+':''}${f((or-1)*100,1)} %) ${pv<0.05?'<b>significativo</b>':'no significativo'}.`)});
+  items.push(`Con u = ${thr.toFixed(2)}: exactitud ${f(C.acc,3)}, sensibilidad ${f(C.rec,3)}, especificidad ${f(C.spec,3)}, F1 ${f(C.f1,3)}${R?`; AUC = ${f(R.auc,3)}`:''}.`);
+  if(pred)items.push(`Caso nuevo: p = <b>${f(pred.p0,4)}</b> ⇒ <b>${esc(pred.p0>=thr?pos:neg)}</b>.`);
+  items.push(`<span class="hint">Métricas sobre datos de ajuste: optimistas. Valida con datos nuevos.</span>`);
+  return conclCard(items);
+}
+
+/* ---------- Multinomial ---------- */
+function rMulti(D){
+  const s=S[cur],cls=classList();
+  if(cls.length<3)throw new Error(`La respuesta tiene ${cls.length} categoría(s). La regresión multinomial necesita 3 o más.`);
+  const ref=cls.includes(s.ref)?s.ref:cls[0],order=[ref,...cls.filter(c=>c!==ref)],K=order.length,k=D.names.length;
+  const yi=D.yraw.map(v=>order.indexOf(v)),X=D.X.map(r=>[1,...r]),p=k+1;
+  if(X.length<K*p)throw new Error(`Hay pocas observaciones (${X.length}) para ${(K-1)*p} parámetros.`);
+  const M=fitMulti(X,yi,K),nm=['Intercepto',...D.names];
+  const x0=nuevoX(D.names),have=x0.every(v=>!isNaN(v));
+  let h=warnDrop(D);
+  if(M.sep)h+=`<div class="warn"><b>Posible separación perfecta.</b></div>`;
+  const acc=M.CM.reduce((s,r,i)=>s+r[i],0)/M.n;
+  const prec=order.map((_,j)=>{const c=sum(M.CM.map(r=>r[j]));return c?M.CM[j][j]/c:NaN});
+  const rec=order.map((_,j)=>{const c=sum(M.CM[j]);return c?M.CM[j][j]/c:NaN});
+  const f1=prec.map((a,j)=>2*a*rec[j]/(a+rec[j]));
+  // forma normal + forma ajustada (una ecuación por clase frente a la ref)
+  const norm=order.slice(1).map(c=>`ln(P(${esc(c)})/P(${esc(ref)})) = b₀ + b₁X₁ + … + bₖXₖ`).join('<br>');
+  const fit=order.slice(1).map((c,j)=>`ln(P(${esc(c)})/P(${esc(ref)})) = ${f(M.B[j*p],3)}${D.names.map((t,q)=>` ${M.B[j*p+q+1]<0?'−':'+'} ${f(Math.abs(M.B[j*p+q+1]),3)}·${esc(t)}`).join('')}`).join('<br>');
+
+  h+=`<div class="card"><h3>Resumen del modelo</h3>
+    <div class="tiles">
+      ${tile(f(M.G,2),'G = 2(ℓ − ℓ₀)')}
+      ${tile(fp(M.pG),`p-valor (χ², ${M.df} gl)`)}
+      ${tile(f(M.mcf,3),'R² de McFadden')}
+      ${tile(f(M.AIC,2),'AIC')}
+      ${tile(f(acc,3),'Exactitud')}
+      ${tile(f(mean(f1.filter(isFinite)),3),'F1 macro')}
+    </div>
+    <p class="formula">Referencia: <b>${esc(ref)}</b>. Forma normal del modelo</p>
+    <div class="eq">${norm}</div>
+    <p class="formula">Modelo ajustado con las variables del contexto</p>
+    <div class="eq">${fit}</div>
+  </div>`;
+
+  // hipótesis global
+  h+=`<div class="card"><h3>Hipótesis global</h3><div class="hypbox">
+    <p><b>H₀:</b> todos los coeficientes (excepto los interceptos) son 0 ⇒ los predictores no distinguen entre las clases.</p>
+    <p><b>H₁:</b> al menos un coeficiente ≠ 0.</p>
+    <p><b>Estadístico:</b> G = ${f(M.G,3)} ~ χ²(${M.df}); p = ${fp(M.pG)}. <b>Decisión:</b> ${M.pG<0.05?'se rechaza H₀':'no se rechaza H₀'}. ${M.pG<0.05?'En el contexto: los predictores ayudan a distinguir '+esc(order.join(', '))+'.':'En el contexto: los predictores no distinguen las clases.'}</p>
+  </div></div>`;
+
+  // coeficientes
+  const rows=[];
+  order.slice(1).forEach((c,j)=>{
+    rows.push(`<tr class="tot"><td colspan="6">${esc(c)} frente a ${esc(ref)}</td></tr>`);
+    nm.forEach((t,q)=>{const i=j*p+q;rows.push(tr([esc(t),f(M.B[i],4),f(M.se[i],4),f(M.z[i],3),sigp(M.pz[i]),q?f(Math.exp(M.B[i]),3):'—']))});
+  });
+  h+=`<div class="card"><h3>Coeficientes y razones de riesgo relativo (RRR)</h3>${tbl(['Parámetro','b','Error est.','z','p-valor','RRR = eᵇ'],rows)}</div>`;
+
+  // nuevo
+  let probsNew=null,predM=null;
+  if(have){
+    const z=order.map((_,j)=>j?dot(M.B.slice((j-1)*p,j*p),[1,...x0]):0);
+    const e=z.map(Math.exp),se=sum(e),pr=e.map(v=>v/se),best=pr.indexOf(Math.max(...pr));
+    probsNew=pr;predM={x0,pr,best};
+    h+=`<div class="card"><h3>Predicción para el caso nuevo</h3>
+      <p>${D.names.map((t,j)=>`${esc(t)} = ${f(x0[j],3)}`).join(', ')}</p>
+      ${tbl(['Clase','P = eᶻ / Σ'],[...order.map((c,j)=>tr([esc(c),f(pr[j],4)])),tr(['Suma',f(sum(pr),4)],'tot')])}
+      <p>Clase predicha: <span class="pill ok">${esc(order[best])}</span> (P = ${f(pr[best],3)}).</p></div>`;
+  }
+
+  // gráficas
+  let ch='';
+  if(k>=1){
+    const xa=D.X.map(r=>r[0]),d1=dom(xa,.1);
+    const fixv=D.X[0].map((_,q)=>q===0?0:(have?(x0[q-1]??0):mean(D.X.map(r=>r[q]))));
+    const N=90,xs=Array.from({length:N+1},(_,i)=>d1[0]+(d1[1]-d1[0])*i/N);
+    const pr=xs.map(v=>M.probs([1,v,...fixv.slice(1)]));
+    let acc_=new Array(N+1).fill(0);
+    const P=Plot({xmin:d1[0],xmax:d1[1],ymin:0,ymax:1,xl:D.names[0],yl:'Probabilidad',yticks:[0,.25,.5,.75,1]});
+    order.forEach((c,j)=>{const lo=xs.map((v,i)=>[v,acc_[i]]),up=xs.map((v,i)=>[v,acc_[i]+pr[i][j]]);
+      P.area(up,lo,{fill:KC[j%6],opacity:.5});acc_=acc_.map((a,i)=>a+pr[i][j])});
+    if(have)P.seg(x0[0],0,x0[0],1,{stroke:'var(--ink)','stroke-dasharray':'4 3'});
+    ch+=fig(P.svg(),`Probabilidad por clase al variar ${esc(D.names[0])}.`,legend(order.map((c,j)=>[KC[j%6],esc(c)])));
+  }
+  if(k===2){
+    const xa=D.X.map(r=>r[0]),xb=D.X.map(r=>r[1]),d1=dom(xa,.1),d2=dom(xb,.1),G=44;
+    const P=Plot({xmin:d1[0],xmax:d1[1],ymin:d2[0],ymax:d2[1],xl:D.names[0],yl:D.names[1]});
+    for(let i=0;i<G;i++)for(let j=0;j<G;j++){
+      const u=d1[0]+(d1[1]-d1[0])*(i+.5)/G,v=d2[0]+(d2[1]-d2[0])*(j+.5)/G;
+      const pp=M.probs([1,u,v]),b=pp.indexOf(Math.max(...pp));
+      P.rect(d1[0]+(d1[1]-d1[0])*i/G,d2[0]+(d2[1]-d2[0])*j/G,d1[0]+(d1[1]-d1[0])*(i+1)/G+.001,d2[0]+(d2[1]-d2[0])*(j+1)/G+.001,{fill:KC[b%6],opacity:(.1+.3*pp[b]).toFixed(2)});
+    }
+    xa.forEach((u,i)=>P.mark(u,xb[i],KS[yi[i]%6],5,{fill:KC[yi[i]%6],stroke:M.pred[i]!==yi[i]?'var(--bad)':'var(--ink)','stroke-width':M.pred[i]!==yi[i]?2.4:.8}));
+    ch+=fig(P.svg(),'Regiones de decisión.');
+  }
+  h+=`<div class="card"><h3>Gráficas</h3><div class="charts">${ch}</div></div>`;
+
+  // confusión
+  const cmrows=order.map((c,i)=>tr([`Real ${esc(c)}`,...M.CM[i].map((v,j)=>i===j?{cls:'diag',v}:v),sum(M.CM[i])]));
+  cmrows.push(tr(['Total predicho',...order.map((_,j)=>sum(M.CM.map(r=>r[j]))),M.n],'tot'));
+  h+=`<div class="card"><h3>Matriz de confusión y métricas</h3><div class="charts">
+    <div>${tbl(['',...order.map(c=>'Pred. '+esc(c)),'Total'],cmrows)}</div>
+    <div>${tbl(['Clase','Precisión','Sensibilidad','F1'],[...order.map((c,j)=>tr([esc(c),f(prec[j],2),f(rec[j],2),f(f1[j],2)])),tr(['Macro',f(mean(prec.filter(isFinite)),3),f(mean(rec.filter(isFinite)),3),f(mean(f1.filter(isFinite)),3)],'tot')])}</div>
+  </div></div>`;
+
+  // supuestos multinomial
+  h+=`<div class="card"><h3>Comprobación de supuestos</h3>
+    ${tbl(['Aspecto','Estadístico','Lectura','Diagnóstico'],[
+      tr(['Muestra (EPV)',`${(Math.min(...M.cnt)/Math.max(1,k)).toFixed(1)}`,'≥ 10 ideal',{cls:'l',v:Math.min(...M.cnt)/Math.max(1,k)>=10?'Adecuado':'Ampliar'}]),
+      tr(['Convergencia',M.conv?'Sí':'No','Newton-Raphson',{cls:'l',v:M.conv?'OK':'Revisar'}]),
+      tr(['Categorías','K = '+K,'≥ 3',{cls:'l',v:K>=3?'OK':'Cambia a logística binaria'}]),
+      tr(['Independencia (IIA)','Asumida','—',{cls:'l',v:'Verificar conceptualmente'}])
+    ])}
+    <ul class="interp">
+      <li><b>Independencia de alternativas irrelevantes (IIA):</b> el modelo asume que la razón de probabilidades entre dos clases no cambia al añadir o quitar otras. Si no se cumple, considera modelos alternativos (probit multinomial, anidados).</li>
+      <li><b>Colinealidad:</b> revisa la sección del tema 2 (VIF) si sospechas inestabilidad.</li>
+      <li><b>Linealidad del logit:</b> cada predictor entra de forma lineal en cada logit; verifica visualmente las curvas de probabilidad.</li>
+    </ul></div>`;
+
+  h+=conclMulti(D,M,order,ref,acc,prec,rec,f1,predM);
+  after=()=>{};return h;
+}
+
+function conclMulti(D,M,order,ref,acc,prec,rec,f1,predM){
+  const p=D.names.length+1,items=[];
+  items.push(`Clasificación de <b>${esc(D.yname)}</b> en ${order.length} clases (ref: <b>${esc(ref)}</b>), n = ${M.n}: ${order.map((c,j)=>`${esc(c)} (${M.cnt[j]})`).join(', ')}.`);
+  items.push(M.pG<0.05?`Modelo <b>globalmente significativo</b> (G = ${f(M.G,2)}, ${M.df} gl, p ${M.pG<0.001?'< 0.001':'= '+f(M.pG,3)}).`:`Modelo <b>no</b> significativo (G = ${f(M.G,2)}, p = ${f(M.pG,3)}).`);
+  items.push(`Exactitud ${f(acc,3)}, F1 macro ${f(mean(f1.filter(isFinite)),3)}.`);
+  items.push(`Por clase: ${order.map((c,j)=>`<b>${esc(c)}</b> F1 = ${f(f1[j],2)}`).join('; ')}.`);
+  const sig=[];
+  order.slice(1).forEach((c,j)=>D.names.forEach((t,q)=>{const i=j*p+q+1;if(M.pz[i]<0.05)sig.push(`${esc(c)} vs ${esc(ref)}: <b>${esc(t)}</b> (RRR = ${f(Math.exp(M.B[i]),3)})`)}));
+  items.push(sig.length?`Coeficientes significativos: ${sig.join('; ')}.`:`Ningún coeficiente significativo por Wald.`);
+  if(predM)items.push(`Caso nuevo: clase más probable <b>${esc(order[predM.best])}</b> (P = ${f(predM.pr[predM.best],3)}).`);
+  items.push(`<span class="hint">Valida con datos nuevos y vigila el supuesto IIA.</span>`);
+  return conclCard(items);
+}
+
+/* =================== botones PNG =================== */
+function downloadBlob(blob,filename){
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;a.download=filename;
+  document.body.appendChild(a);a.click();
+  setTimeout(()=>{document.body.removeChild(a);URL.revokeObjectURL(url)},150);
+}
+function addChartButtons(){
+  document.querySelectorAll('.chart-dl').forEach(b=>b.remove());
+  document.querySelectorAll('#out figure').forEach(figEl=>{
+    const svg=figEl.querySelector('svg.plot');
+    if(!svg)return;
+    const btn=document.createElement('button');
+    btn.className='chart-dl';btn.type='button';btn.textContent='PNG';btn.title='Descargar como PNG';
+    btn.onclick=()=>{
+      const svgStr=new XMLSerializer().serializeToString(svg);
+      const blob=new Blob([svgStr],{type:'image/svg+xml'});
+      const url=URL.createObjectURL(blob);
+      const img=new Image();
+      img.onload=()=>{
+        const vb=svg.viewBox.baseVal;
+        const w=vb&&vb.width?vb.width:560, h=vb&&vb.height?vb.height:380;
+        const canvas=document.createElement('canvas');
+        canvas.width=w*2;canvas.height=h*2;
+        const ctx=canvas.getContext('2d');
+        ctx.fillStyle='#fff';ctx.fillRect(0,0,canvas.width,canvas.height);
+        ctx.drawImage(img,0,0,canvas.width,canvas.height);
+        canvas.toBlob(b2=>{URL.revokeObjectURL(url);downloadBlob(b2,'grafica_'+Date.now()+'.png')});
+      };
+      img.src=url;
+    };
+    figEl.appendChild(btn);
+  });
+}
+
+/* =================== exportación =================== */
+const MODEL_NAMES={1:'Regresión Lineal Simple',2:'Regresión Lineal Múltiple',3:'Regresión Logística Simple',4:'Regresión Logística Binaria',5:'Regresión Logística Multinomial'};
+function getModelName(){return MODEL_NAMES[cur]||'Regresión'}
+function getDateStr(){return new Date().toLocaleDateString('es-MX',{year:'numeric',month:'long',day:'numeric'})}
+function getReportTitle(){const s=S[cur];return `${getModelName()}: análisis de ${s.y} en función de ${s.preds.join(', ')||'—'}`}
+function getAbstract(){
+  const s=S[cur],n=s.rows.length,preds=s.preds.join(', ');
+  return `Este informe presenta un análisis de ${getModelName().toLowerCase()} para examinar la relación entre ${s.y} (variable respuesta) y ${preds} (${s.preds.length>1?'predictores':'predictor'}). Se utilizaron n = ${n} observaciones. Se estiman coeficientes, se contrastan hipótesis, se reportan medidas de ajuste, se comparan predictores y se comprueban supuestos (linealidad, independencia, homocedasticidad, normalidad y colinealidad).`;
+}
+function getContextText(){const s=S[cur];return String(s.ctx||'').trim()||`Se analiza la variable ${s.y} a partir de ${s.preds.join(', ')} con ${s.rows.length} observaciones.`}
+function getMethod(){
+  const s=S[cur],n=s.rows.length,preds=s.preds.join(', ');
+  const m={1:'mínimos cuadrados ordinarios',2:'mínimos cuadrados ordinarios',3:'máxima verosimilitud (Newton–Raphson)',4:'máxima verosimilitud (Newton–Raphson)',5:'máxima verosimilitud (Newton–Raphson)'};
+  const md={1:'lineal simple',2:'lineal múltiple',3:'logística binaria con un predictor',4:'logística binaria',5:'logística multinomial'};
+  return `Se ajustó un modelo de regresión ${md[cur]} mediante ${m[cur]}, con n = ${n} observaciones. La variable respuesta fue "${s.y}" y ${s.preds.length>1?'los predictores fueron':'el predictor fue'} ${preds}. Los datos se ingresaron en una tabla estructurada. Nivel de significancia α = .05.`;
+}
+function populateApaHeader(){
+  const el=id=>document.getElementById(id);
+  if(!el('apaTitle'))return;
+  el('apaTitle').textContent=getReportTitle();
+  el('apaDate').textContent=getDateStr();
+  el('apaAbstract').textContent=getAbstract();
+  el('apaContext').textContent=getContextText();
+  el('apaMethod').textContent=getMethod();
+}
+document.getElementById('btnPdf').addEventListener('click',()=>{populateApaHeader();document.title=getReportTitle();setTimeout(()=>window.print(),200)});
+document.getElementById('btnCsv').addEventListener('click',()=>{
+  const s=S[cur];
+  const escCsv=v=>{const str=String(v??'');return /[",\n;]/.test(str)?'"'+str.replace(/"/g,'""')+'"':str};
+  const lines=[s.header,...s.rows].map(r=>r.map(escCsv).join(','));
+  downloadBlob(new Blob(['\ufeff'+lines.join('\n')],{type:'text/csv;charset=utf-8;'}),`datos_${cur}_${Date.now()}.csv`);
+});
+document.getElementById('btnXls').addEventListener('click',()=>{
+  const s=S[cur];
+  if(typeof XLSX==='undefined'){
+    const parts=['Laboratorio de Regresión',`Modelo,${getModelName()}`,`Fecha,${getDateStr()}`,'',
+      'DATOS',[s.header,...s.rows].map(r=>r.map(v=>`"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n'),'','RESULTADOS'];
+    document.querySelectorAll('#out .card').forEach(card=>{
+      const h3=card.querySelector('h3');const tables=card.querySelectorAll('table');
+      if(!h3||!tables.length)return;
+      if(h3.textContent.trim()==='Contexto del ejercicio')return;
+      parts.push('');parts.push(h3.textContent.trim());
+      tables.forEach(t=>{[...t.querySelectorAll('tr')].forEach(tr=>{
+        const cells=[...tr.querySelectorAll('th,td')].map(c=>`"${c.textContent.trim().replace(/"/g,'""')}"`);
+        parts.push(cells.join(','));
+      });parts.push('')});
+    });
+    downloadBlob(new Blob(['\ufeff'+parts.join('\n')],{type:'text/csv;charset=utf-8;'}),`resultados_${cur}_${Date.now()}.csv`);
+    return;
+  }
+  const wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet([s.header,...s.rows]),'Datos');
+  const infoAoa=[['Laboratorio de Regresión'],['Modelo',getModelName()],['Fecha',getDateStr()],['Y',s.y],['Predictores',s.preds.join(', ')],['n',s.rows.length],[],['Contexto'],[getContextText()]];
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(infoAoa),'Info');
+  const resAoa=[];
+  document.querySelectorAll('#out .card').forEach(card=>{
+    const h3=card.querySelector('h3');const tables=card.querySelectorAll('table');
+    if(!h3||!tables.length)return;
+    const title=h3.textContent.trim();
+    if(!title||title==='Contexto del ejercicio')return;
+    resAoa.push([title]);
+    tables.forEach(t=>{[...t.querySelectorAll('tr')].forEach(tr=>{
+      const cells=[...tr.querySelectorAll('th,td')].map(c=>c.textContent.trim());
+      resAoa.push(cells);
+    });resAoa.push([])});
+    resAoa.push([]);
+  });
+  if(resAoa.length)XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(resAoa),'Resultados');
+  XLSX.writeFile(wb,`resultados_${cur}_${Date.now()}.xlsx`);
+});
+
+/* =================== tema claro/oscuro =================== */
+const themeBtn=document.getElementById('themeBtn');
+const saved=localStorage.getItem('lab-reg-theme');
+if(saved)document.documentElement.dataset.theme=saved;
+themeBtn.onclick=()=>{
+  const cur=document.documentElement.dataset.theme;
+  const next=cur==='dark'?'light':cur==='light'?'dark':(matchMedia('(prefers-color-scheme: dark)').matches?'light':'dark');
+  document.documentElement.dataset.theme=next;
+  localStorage.setItem('lab-reg-theme',next);
+};
+
+/* =================== arranque =================== */
+buildTabs();buildPanel();solve();
+</script>
+</body></html>
